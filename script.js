@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DADOS PARA A API DO GITHUB (ATUALIZE ESTES VALORES!) ---
     const GITHUB_USUARIO = 'Geraldo-Morais';
     const GITHUB_REPOSITORIO = 'agenda-app';
-    const GITHUB_TOKEN = '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'; 
+    const GITHUB_TOKEN = 'xxxxxxxxx'; 
     const GITHUB_ARQUIVO_DADOS = 'agenda.json';
     let shaDoArquivo = null; // Vamos precisar do SHA para salvar as alterações
     
