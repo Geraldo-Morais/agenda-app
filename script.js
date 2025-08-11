@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
-    // --- DADOS PARA A API DO GITHUB (ATUALIZE ESTES VALORES!) ---
     const GITHUB_USUARIO = 'Geraldo-Morais';
     const GITHUB_REPOSITORIO = 'agenda-app';
     const GITHUB_TOKEN = 'xxxxxxxxx'; 
@@ -39,8 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     let agenda = agendaPadrao;
     let destaqueInterval;
-    
-    // --- FUNÇÕES DE INTERAÇÃO COM A API DO GITHUB ---
 
     async function carregarAgendaDoGitHub() {
         try {
@@ -99,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNÇÕES EXISTENTES COM ADAPTAÇÕES ---
 
     function mostrarToast(mensagem, tipo = 'sucesso') {
         if (!toastEl) return;
@@ -346,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
         
-        const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
+        const savedTheme = localStorage.getItem('agendaTheme') || 'default';
         document.documentElement.setAttribute('data-theme', savedTheme);
         const themeSwitcher = document.querySelector('.theme-switcher');
         if (themeSwitcher) {
