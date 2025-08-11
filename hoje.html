@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda do Dia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="vista-diaria">
+
+    <main class="agenda-container">
+        <div class="dias-semana" id="container-dias"></div>
+    </main>
+
+<div id="toast" class="toast"></div>
+
+    <div id="modal-copiar" class="modal-overlay">
+        <div class="modal-conteudo">
+            <h3>Copiar atividades de:</h3>
+            <ul id="lista-dias-copia"></ul>
+            
+            <button id="btn-add-avulso" class="botao">Adicionar Tarefa em Branco</button>
+            <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
