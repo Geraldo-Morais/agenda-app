@@ -2,17 +2,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const containerDias = document.getElementById('container-dias');
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const mensagensFofas = [
+        'Você conseguiu, Bea! <3',
+        'Dia concluído com sucesso, Bezinha! ✨',
+        'Parabéns, Amor! Todas as tarefas foram feitas! 🎉',
+        'Você é incrível, B! Mais um dia perfeito! ❤️',
+        'Isso aí, meu bem! Dia finalizado com maestria! 🥂'
+    ];
 
-    const agendaPadrao = {
-        domingo: [{ id: 'dom-descanso', descricao: 'Dia de descanso', inicio: '', fim: '' }],
-        segunda: [ { id: 'seg-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' }, { id: 'seg-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' }, { id: 'seg-revisao', descricao: 'Revisão Front', inicio: '16:30', fim: '18:00' }, { id: 'seg-contratos', descricao: 'Teoria Geral dos Contratos', inicio: '19:00', fim: '22:00' }, ],
-        terca: [ { id: 'ter-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' }, { id: 'ter-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' }, { id: 'ter-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'ter-democratica', descricao: 'Instruções Democráticas', inicio: '18:30', fim: '20:10' }, { id: 'ter-atividades', descricao: 'Atividades práticas', inicio: '', fim: '' }, ],
-        quarta: [ { id: 'qua-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' }, { id: 'qua-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' }, { id: 'qua-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'qua-tutelas', descricao: 'Tutelas Provisórias', inicio: '18:30', fim: '20:10' }, { id: 'qua-civil', descricao: 'Responsabilidade Civil', inicio: '20:20', fim: '22:00' }, ],
-        quinta: [ { id: 'qui-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' }, { id: 'qui-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' }, { id: 'qui-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'qui-negocios', descricao: 'Direito dos Negócios', inicio: '18:30', fim: '21:00' }, ],
-        sexta: [ { id: 'sex-exercicio', descricao: 'Exercício', inicio: '06:30', fim: '07:30' }, { id: 'sex-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:00' }, { id: 'sex-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'sex-crimes', descricao: 'Crimes em Espécie', inicio: '18:30', fim: '20:10' }, { id: 'sex-teclado', descricao: 'Teclado', inicio: '21:30', fim: '22:30' }, ],
-        sabado: [ { id: 'sab-piano', descricao: 'Aulas Piano', inicio: '10:00', fim: '11:00' }, { id: 'sab-org', descricao: 'Organização pessoal', inicio: '13:00', fim: '16:00' }, ],
-    };
-    let agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao;
+    let agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || {};
+
+    function getChaveDeHoje() {
+        const hoje = new Date();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        return `concluidas-${hoje.getFullYear()}-${mes}-${dia}`;
+    }
+
+    function salvarConcluidas() {
+        const chaveDeHoje = getChaveDeHoje();
+        const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id);
+        localStorage.setItem(chaveDeHoje, JSON.stringify(concluidasIds));
+    }
+
+    function carregarConcluidas() {
+        const chaveDeHoje = getChaveDeHoje();
+        const concluidasIds = JSON.parse(localStorage.getItem(chaveDeHoje)) || [];
+        concluidasIds.forEach(id => {
+            const atividadeEl = document.querySelector(`.atividade[data-id="${id}"]`);
+            if (atividadeEl) atividadeEl.classList.add('concluida');
+        });
+        mapaDosDias.forEach(verificarConclusaoDia);
+    }
+    
+    function mostrarToast(mensagem, tipo = 'sucesso') {
+        const toastEl = document.getElementById('toast');
+        if (!toastEl) return;
+        toastEl.textContent = mensagem;
+        toastEl.className = 'toast';
+        toastEl.classList.add(tipo);
+        toastEl.classList.add('show');
+        setTimeout(() => { toastEl.classList.remove('show'); }, 4000);
+    }
+    
+    function verificarConclusaoDia(nomeDia) {
+        const diaEl = document.getElementById(nomeDia);
+        if (!diaEl) return;
+        const totalAtividades = (agenda[nomeDia] || []).filter(atv => atv.descricao && atv.descricao !== 'Dia de descanso').length;
+        const atividadesConcluidas = diaEl.querySelectorAll('.atividade.concluida').length;
+        const estavaConcluido = diaEl.classList.contains('dia-concluido');
+        if (totalAtividades > 0 && totalAtividades === atividadesConcluidas) {
+            diaEl.classList.add('dia-concluido');
+            if (!estavaConcluido) {
+                const mensagemAleatoria = mensagensFofas[Math.floor(Math.random() * mensagensFofas.length)];
+                mostrarToast(mensagemAleatoria, 'info');
+            }
+        } else {
+            diaEl.classList.remove('dia-concluido');
+        }
+    }
 
     function renderizarAgenda() {
         if (!containerDias) return;
@@ -56,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (atividadesDoDia.length === 0) {
                 const mensagemVazio = document.createElement('p');
                 mensagemVazio.className = 'mensagem-dia-vazio';
-                mensagemVazio.textContent = "Nenhuma atividade para hoje!";
+                mensagemVazio.textContent = "Nenhuma atividade para hoje! Adicione na página principal.";
                 listaAtividades.appendChild(mensagemVazio);
             } else {
                 atividadesDoDia.forEach(atividade => {
@@ -65,8 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemLista.className = 'atividade';
                     const horario = atividade.inicio && atividade.fim ? `${atividade.inicio} - ${atividade.fim}` : (atividade.inicio || '');
                     itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${horario}</span>`;
+                    
                     itemLista.addEventListener('click', () => {
-                        alert("Para editar ou marcar como concluída, use a página principal.");
+                        itemLista.classList.toggle('concluida');
+                        salvarConcluidas();
+                        verificarConclusaoDia(nomeDia);
                     });
                     listaAtividades.appendChild(itemLista);
                 });
@@ -75,6 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
         });
+
+        carregarConcluidas();
     }
     
     function inicializar() {
