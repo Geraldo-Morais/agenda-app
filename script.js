@@ -3,12 +3,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const tituloPrincipalEl = document.getElementById('titulo-principal');
     const btnEditar = document.getElementById('btn-editar');
     const btnResetar = document.getElementById('btn-resetar');
-    const btnExportar = document.getElementById('btn-exportar');
     const toastEl = document.getElementById('toast');
     const modalCopiar = document.getElementById('modal-copiar');
     const listaDiasCopia = document.getElementById('lista-dias-copia');
     const btnCancelarCopia = document.getElementById('btn-cancelar-copia');
     const btnAddAvulso = document.getElementById('btn-add-avulso');
+
+    // Suas chaves do Firebase que você acabou de gerar
+    const firebaseConfig = {
+        apiKey: "AIzaSyAYhpZykVwZ-_KVkgx5iGBAITKtcuZMfUQ",
+        authDomain: "agenda-da-bea.firebaseapp.com",
+        projectId: "agenda-da-bea",
+        storageBucket: "agenda-da-bea.appspot.com",
+        messagingSenderId: "509913679664",
+        appId: "1:509913679664:web:9e251227071260b55e2af5"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const agendaDocRef = db.collection('agendas').doc('minhaAgenda');
 
     let modoEdicao = false;
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
@@ -25,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sexta: [ { id: 'sex-exercicio', descricao: 'Exercício', inicio: '06:30', fim: '07:30' }, { id: 'sex-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:00' }, { id: 'sex-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'sex-crimes', descricao: 'Crimes em Espécie', inicio: '18:30', fim: '20:10' }, { id: 'sex-teclado', descricao: 'Teclado', inicio: '21:30', fim: '22:30' }, ],
         sabado: [ { id: 'sab-piano', descricao: 'Aulas Piano', inicio: '10:00', fim: '11:00' }, { id: 'sab-org', descricao: 'Organização pessoal', inicio: '13:00', fim: '16:00' }, ],
     };
-    let agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao;
+    let agenda = {};
     let destaqueInterval;
 
     function mostrarToast(mensagem, tipo = 'sucesso') {
@@ -70,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function salvarAgenda() { localStorage.setItem('minhaAgenda', JSON.stringify(agenda)); }
     function getChaveDeHoje() { const hoje = new Date(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `concluidas-${hoje.getFullYear()}-${mes}-${dia}`; }
     function salvarConcluidas() { const chaveDeHoje = getChaveDeHoje(); const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); localStorage.setItem(chaveDeHoje, JSON.stringify(concluidasIds)); }
     function carregarConcluidas() { const chaveDeHoje = getChaveDeHoje(); const concluidasIds = JSON.parse(localStorage.getItem(chaveDeHoje)) || []; concluidasIds.forEach(id => { const atividadeEl = document.querySelector(`.atividade[data-id="${id}"]`); if (atividadeEl) atividadeEl.classList.add('concluida'); }); mapaDosDias.forEach(verificarConclusaoDia); }
@@ -206,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function adicionarAtividadeSimples(nomeDia) { const novaAtividade = { id: `${nomeDia}-${Date.now()}`, descricao: 'Nova Atividade', inicio: '', fim: '' }; if (!agenda[nomeDia]) agenda[nomeDia] = []; if (agenda[nomeDia].length === 1 && agenda[nomeDia][0].descricao === 'Dia de descanso') { agenda[nomeDia] = []; } agenda[nomeDia].push(novaAtividade); renderizarAgenda(); }
     function removerAtividade(evento) { const idParaRemover = evento.target.dataset.id; const nomeDia = evento.target.dataset.dia; agenda[nomeDia] = agenda[nomeDia].filter(atividade => atividade.id !== idParaRemover); renderizarAgenda(); }
 
-    function salvarAlteracoes() {
+    async function salvarAlteracoes() {
         const todosDias = document.querySelectorAll('.dia');
         todosDias.forEach(diaEl => {
             const nomeDia = diaEl.id;
@@ -223,15 +236,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             agenda[nomeDia] = novasAtividades;
         });
-        salvarAgenda();
-        mostrarToast('Agenda salva com sucesso!');
+        
+        try {
+            await agendaDocRef.set(agenda);
+            mostrarToast('Agenda salva com sucesso na nuvem!');
+        } catch (error) {
+            console.error("Erro ao salvar agenda: ", error);
+            mostrarToast('Erro ao salvar. Verifique sua conexão.', 'info');
+        }
     }
 
     if (btnEditar) {
         btnEditar.addEventListener('click', () => {
             modoEdicao = !modoEdicao;
             if(btnResetar) btnResetar.style.display = modoEdicao ? 'inline-block' : 'none';
-            if(btnExportar) btnExportar.style.display = modoEdicao ? 'none' : 'inline-block';
             if (modoEdicao) {
                 btnEditar.textContent = 'Salvar';
                 btnEditar.classList.add('salvar');
@@ -247,43 +265,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if(btnResetar) {
-        btnResetar.addEventListener('click', () => {
+        btnResetar.addEventListener('click', async () => {
             const confirmou = confirm('Tem certeza que deseja apagar TODAS as suas alterações e voltar para a rotina padrão?');
             if (confirmou) {
-                localStorage.removeItem('minhaAgenda');
-                localStorage.removeItem('agendaTheme');
-                Object.keys(localStorage).forEach(key => { if (key.startsWith('concluidas-')) { localStorage.removeItem(key); } });
-                location.reload();
+                try {
+                    await agendaDocRef.set(agendaPadrao);
+                    agenda = agendaPadrao;
+                    renderizarAgenda();
+                    mostrarToast('Agenda restaurada para o padrão!');
+                } catch (error) {
+                    mostrarToast('Erro ao resetar a agenda.', 'info');
+                }
             }
         });
     }
 
-    async function exportarWidgetHTML() {
-        try {
-            const response = await fetch('style.css');
-            if (!response.ok) throw new Error('Não foi possível carregar o style.css');
-            const cssText = await response.text();
-            const diaDeHojeEl = document.querySelector('.dia.hoje');
-            if (!diaDeHojeEl) { alert('Card do dia de hoje não encontrado para exportar.'); return; }
-            const cardHTML = diaDeHojeEl.outerHTML;
-            const temaAtual = document.documentElement.getAttribute('data-theme') || 'default';
-            const htmlFinal = `<!DOCTYPE html><html lang="pt-BR" data-theme="${temaAtual}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Widget da Agenda</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"><style>${cssText} body { display: flex; justify-content: center; align-items: center; padding: 0; margin: 0; background-color: transparent; } .dias-semana { display: block; width: 100%; max-width: 400px; } .dia { opacity: 1; animation: none; transform: none; border: none; padding-bottom: 4rem; box-shadow: none; } </style></head><body><div class="dias-semana">${cardHTML}</div></body></html>`;
-            const blob = new Blob([htmlFinal], { type: 'text/html' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'widget.html';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-            mostrarToast('Widget exportado como widget.html!');
-        } catch (error) {
-            console.error('Erro ao exportar widget:', error);
-            alert('Ocorreu um erro ao exportar. Verifique se está usando um servidor local (como o Live Server) e tente novamente.');
-        }
-    }
-
-    if(btnExportar) { btnExportar.addEventListener('click', exportarWidgetHTML); }
     if(btnCancelarCopia) btnCancelarCopia.addEventListener('click', fecharModalCopia);
     if(listaDiasCopia) listaDiasCopia.addEventListener('click', copiarAtividades);
     if(btnAddAvulso) {
@@ -316,7 +312,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        renderizarAgenda();
+        // Listener em tempo real do Firebase
+        agendaDocRef.onSnapshot((doc) => {
+            if (doc.exists) {
+                agenda = doc.data();
+            } else {
+                agendaDocRef.set(agendaPadrao);
+                agenda = agendaPadrao;
+            }
+            renderizarAgenda();
+        }, (error) => {
+            console.error("Erro ao ouvir a agenda: ", error);
+            mostrarToast("Erro de conexão com a agenda online.", "info");
+            agenda = agendaPadrao;
+            renderizarAgenda();
+        });
+
         if(!isVistaDiaria) {
             destaqueInterval = setInterval(destacarAtividadeAtual, 60000); 
         } else {
