@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tituloPrincipalEl = document.getElementById('titulo-principal');
     const btnEditar = document.getElementById('btn-editar');
     const btnResetar = document.getElementById('btn-resetar');
+    const btnExportar = document.getElementById('btn-exportar');
     const toastEl = document.getElementById('toast');
     const modalCopiar = document.getElementById('modal-copiar');
     const listaDiasCopia = document.getElementById('lista-dias-copia');
@@ -12,20 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let modoEdicao = false;
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-
-    const GITHUB_USUARIO = 'Geraldo-Morais';
-    const GITHUB_REPOSITORIO = 'agenda-app';
-    const GITHUB_TOKEN = 'xxxxxxxxx'; 
-    const GITHUB_ARQUIVO_DADOS = 'agenda.json';
-    let shaDoArquivo = null; // Vamos precisar do SHA para salvar as alterações
     
-    const mensagensFofas = [
-        'Você conseguiu, mozinha! <3',
-        'Dia concluído com sucesso, Bezinha! ❤️',
-        'Parabéns, Amor! Todas as tarefas foram feitas! 🎉',
-        'Você é incrível, moreco! Mais um dia perfeito! ❤️',
-        'Isso aí, meu bem! Mandou bem, cachorra! ❤️'
-    ];
+    const mensagensFofas = [ 'Você conseguiu, Bea! <3', 'Dia concluído com sucesso, Bezinha! ✨', 'Parabéns, Amor! Todas as tarefas foram feitas! 🎉', 'Você é incrível, B! Mais um dia perfeito! ❤️', 'Isso aí, meu bem! Dia finalizado com maestria! 🥂' ];
 
     const agendaPadrao = {
         domingo: [{ id: 'dom-descanso', descricao: 'Dia de descanso', inicio: '', fim: '' }],
@@ -36,66 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
         sexta: [ { id: 'sex-exercicio', descricao: 'Exercício', inicio: '06:30', fim: '07:30' }, { id: 'sex-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:00' }, { id: 'sex-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'sex-crimes', descricao: 'Crimes em Espécie', inicio: '18:30', fim: '20:10' }, { id: 'sex-teclado', descricao: 'Teclado', inicio: '21:30', fim: '22:30' }, ],
         sabado: [ { id: 'sab-piano', descricao: 'Aulas Piano', inicio: '10:00', fim: '11:00' }, { id: 'sab-org', descricao: 'Organização pessoal', inicio: '13:00', fim: '16:00' }, ],
     };
-    let agenda = agendaPadrao;
+    let agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao;
     let destaqueInterval;
-
-    async function carregarAgendaDoGitHub() {
-        try {
-            const url = `https://api.github.com/repos/${GITHUB_USUARIO}/${GITHUB_REPOSITORIO}/contents/${GITHUB_ARQUIVO_DADOS}`;
-            const response = await fetch(url, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-            });
-            const data = await response.json();
-
-            if (data.content) {
-                const decodedContent = atob(data.content);
-                agenda = JSON.parse(decodedContent);
-                shaDoArquivo = data.sha;
-                console.log('Agenda carregada do GitHub com sucesso!');
-            } else {
-                console.error('Arquivo não encontrado ou erro na API. Usando agenda padrão.');
-                agenda = agendaPadrao;
-            }
-        } catch (error) {
-            console.error('Erro ao carregar a agenda do GitHub:', error);
-            agenda = agendaPadrao;
-        }
-    }
-
-    async function salvarAgendaNoGitHub() {
-        const url = `https://api.github.com/repos/${GITHUB_USUARIO}/${GITHUB_REPOSITORIO}/contents/${GITHUB_ARQUIVO_DADOS}`;
-        const novoConteudo = JSON.stringify(agenda, null, 2);
-        const conteudoCodificado = btoa(unescape(encodeURIComponent(novoConteudo)));
-
-        try {
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: 'Atualizando agenda via web app',
-                    content: conteudoCodificado,
-                    sha: shaDoArquivo // O SHA é necessário para evitar conflitos
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                shaDoArquivo = data.content.sha; // Atualiza o SHA para a próxima alteração
-                mostrarToast('Agenda salva com sucesso na nuvem!');
-            } else {
-                const errorData = await response.json();
-                console.error('Erro ao salvar no GitHub:', errorData);
-                mostrarToast('Erro ao salvar a agenda. Tente novamente.', 'info');
-            }
-        } catch (error) {
-            console.error('Erro de rede ao salvar a agenda:', error);
-            mostrarToast('Erro de rede. Verifique sua conexão.', 'info');
-        }
-    }
-
 
     function mostrarToast(mensagem, tipo = 'sucesso') {
         if (!toastEl) return;
@@ -139,12 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // A partir de agora, o salvamento será na nuvem
-    function salvarConcluidas() { const chaveDeHoje = getChaveDeHoje(); const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); localStorage.setItem(chaveDeHoje, JSON.stringify(concluidasIds)); }
+    function salvarAgenda() { localStorage.setItem('minhaAgenda', JSON.stringify(agenda)); }
     function getChaveDeHoje() { const hoje = new Date(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `concluidas-${hoje.getFullYear()}-${mes}-${dia}`; }
+    function salvarConcluidas() { const chaveDeHoje = getChaveDeHoje(); const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); localStorage.setItem(chaveDeHoje, JSON.stringify(concluidasIds)); }
     function carregarConcluidas() { const chaveDeHoje = getChaveDeHoje(); const concluidasIds = JSON.parse(localStorage.getItem(chaveDeHoje)) || []; concluidasIds.forEach(id => { const atividadeEl = document.querySelector(`.atividade[data-id="${id}"]`); if (atividadeEl) atividadeEl.classList.add('concluida'); }); mapaDosDias.forEach(verificarConclusaoDia); }
 
     function renderizarAgenda() {
+        if (!containerDias) return;
         containerDias.innerHTML = '';
         const hoje = new Date();
         const diaDaSemanaDeHoje = hoje.getDay();
@@ -184,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnAdicionar.dataset.dia = nomeDia;
                 btnAdicionar.addEventListener('click', (e) => {
                     const dia = e.target.dataset.dia;
-                    if (agenda[dia] && agenda[dia].length > 0) {
+                    const atividadesDoDia = agenda[dia] || [];
+                    if (atividadesDoDia.length > 0 && !(atividadesDoDia.length === 1 && atividadesDoDia[0].descricao === 'Dia de descanso')) {
                         adicionarAtividadeSimples(dia);
                     } else {
                         abrirModalCopia(dia);
@@ -270,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarAgenda();
     }
     
-    function adicionarAtividadeSimples(nomeDia) { const novaAtividade = { id: `${nomeDia}-${Date.now()}`, descricao: 'Nova Atividade', inicio: '', fim: '' }; if (!agenda[nomeDia]) agenda[nomeDia] = []; agenda[nomeDia].push(novaAtividade); renderizarAgenda(); }
+    function adicionarAtividadeSimples(nomeDia) { const novaAtividade = { id: `${nomeDia}-${Date.now()}`, descricao: 'Nova Atividade', inicio: '', fim: '' }; if (!agenda[nomeDia]) agenda[nomeDia] = []; if (agenda[nomeDia].length === 1 && agenda[nomeDia][0].descricao === 'Dia de descanso') { agenda[nomeDia] = []; } agenda[nomeDia].push(novaAtividade); renderizarAgenda(); }
     function removerAtividade(evento) { const idParaRemover = evento.target.dataset.id; const nomeDia = evento.target.dataset.dia; agenda[nomeDia] = agenda[nomeDia].filter(atividade => atividade.id !== idParaRemover); renderizarAgenda(); }
 
     function salvarAlteracoes() {
@@ -286,17 +219,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inicio = horariosInputs[0] ? horariosInputs[0].value : '';
                 const fim = horariosInputs[1] ? horariosInputs[1].value : '';
                 const idOriginal = itemLista.dataset.id;
-                novasAtividades.push({ id: idOriginal, descricao: descricao, inicio: inicio, fim: fim });
+                if (descricao) { novasAtividades.push({ id: idOriginal, descricao: descricao, inicio: inicio, fim: fim }); }
             });
             agenda[nomeDia] = novasAtividades;
         });
-        salvarAgendaNoGitHub();
+        salvarAgenda();
+        mostrarToast('Agenda salva com sucesso!');
     }
 
     if (btnEditar) {
         btnEditar.addEventListener('click', () => {
             modoEdicao = !modoEdicao;
             if(btnResetar) btnResetar.style.display = modoEdicao ? 'inline-block' : 'none';
+            if(btnExportar) btnExportar.style.display = modoEdicao ? 'none' : 'inline-block';
             if (modoEdicao) {
                 btnEditar.textContent = 'Salvar';
                 btnEditar.classList.add('salvar');
@@ -315,16 +250,42 @@ document.addEventListener('DOMContentLoaded', () => {
         btnResetar.addEventListener('click', () => {
             const confirmou = confirm('Tem certeza que deseja apagar TODAS as suas alterações e voltar para a rotina padrão?');
             if (confirmou) {
-                agenda = agendaPadrao;
-                renderizarAgenda();
-                mostrarToast('Agenda resetada para o padrão (localmente)! Salve para aplicar na nuvem.', 'info');
+                localStorage.removeItem('minhaAgenda');
+                localStorage.removeItem('agendaTheme');
+                Object.keys(localStorage).forEach(key => { if (key.startsWith('concluidas-')) { localStorage.removeItem(key); } });
+                location.reload();
             }
         });
     }
 
+    async function exportarWidgetHTML() {
+        try {
+            const response = await fetch('style.css');
+            if (!response.ok) throw new Error('Não foi possível carregar o style.css');
+            const cssText = await response.text();
+            const diaDeHojeEl = document.querySelector('.dia.hoje');
+            if (!diaDeHojeEl) { alert('Card do dia de hoje não encontrado para exportar.'); return; }
+            const cardHTML = diaDeHojeEl.outerHTML;
+            const temaAtual = document.documentElement.getAttribute('data-theme') || 'default';
+            const htmlFinal = `<!DOCTYPE html><html lang="pt-BR" data-theme="${temaAtual}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Widget da Agenda</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"><style>${cssText} body { display: flex; justify-content: center; align-items: center; padding: 0; margin: 0; background-color: transparent; } .dias-semana { display: block; width: 100%; max-width: 400px; } .dia { opacity: 1; animation: none; transform: none; border: none; padding-bottom: 4rem; box-shadow: none; } </style></head><body><div class="dias-semana">${cardHTML}</div></body></html>`;
+            const blob = new Blob([htmlFinal], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'widget.html';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            mostrarToast('Widget exportado como widget.html!');
+        } catch (error) {
+            console.error('Erro ao exportar widget:', error);
+            alert('Ocorreu um erro ao exportar. Verifique se está usando um servidor local (como o Live Server) e tente novamente.');
+        }
+    }
+
+    if(btnExportar) { btnExportar.addEventListener('click', exportarWidgetHTML); }
     if(btnCancelarCopia) btnCancelarCopia.addEventListener('click', fecharModalCopia);
     if(listaDiasCopia) listaDiasCopia.addEventListener('click', copiarAtividades);
-    
     if(btnAddAvulso) {
         btnAddAvulso.addEventListener('click', () => {
             const diaDestino = modalCopiar.dataset.diaDestino;
@@ -335,14 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    async function inicializar() {
+    function inicializar() {
         if (tituloPrincipalEl) {
             const hoje = new Date();
             const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
         
-        const savedTheme = localStorage.getItem('agendaTheme') || 'default';
+        const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
         document.documentElement.setAttribute('data-theme', savedTheme);
         const themeSwitcher = document.querySelector('.theme-switcher');
         if (themeSwitcher) {
@@ -355,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        await carregarAgendaDoGitHub();
         renderizarAgenda();
         if(!isVistaDiaria) {
             destaqueInterval = setInterval(destacarAtividadeAtual, 60000); 
