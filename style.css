@@ -15,16 +15,13 @@ html {
     --cor-texto-botao: #8d7a7f;
     --cor-destaque: #e91e63;
     --cor-numero-dia: rgba(233, 30, 99, 0.08);
-    
     --cor-verde-add: #a7d8b0;
     --cor-vermelho-rem: #f4b6b6;
     --cor-verde-concluido: #e8f5e9;
-
     --cor-borda-1: #ffcdd2;
     --cor-borda-2: #e1bee7;
     --cor-borda-3: #d1c4e9;
     --cor-borda-4: #c5cae9;
-
     --sombra: 0 4px 12px rgba(0, 0, 0, 0.08);
     --sombra-hover: 0 10px 30px rgba(0, 0, 0, 0.15);
     --borda-arredondada: 12px;
@@ -63,8 +60,8 @@ body {
 .dia:nth-child(5) { animation-delay: 0.25s; }
 .dia:nth-child(6) { animation-delay: 0.3s; }
 .dia:nth-child(7) { animation-delay: 0.35s; }
-.dia:not(.hoje):hover { transform: scale(1.08); box-shadow: var(--sombra-hover); z-index: 10; }
-.dia.hoje:hover { transform: scale(1.1); box-shadow: var(--sombra-hover); z-index: 10; }
+.dia:not(.hoje):hover { transform: scale(1.5); box-shadow: var(--sombra-hover); z-index: 10; }
+.dia.hoje:hover { transform: scale(1.5); box-shadow: var(--sombra-hover); z-index: 10; }
 .dia-numero { position: absolute; bottom: 0.25rem; right: 0.75rem; font-size: 3.25rem; font-weight: 700; color: var(--cor-numero-dia); z-index: 1; transition: color 0.3s ease; }
 .conteudo-dia { position: relative; z-index: 2; flex-grow: 1; display: flex; flex-direction: column; }
 .dia h2 { font-weight: 500; font-size: 1.1rem; }
