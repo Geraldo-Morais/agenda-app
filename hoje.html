@@ -3,34 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Rotina Semanal</title>
+    <title>Agenda do Dia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
-<body>
-
-    <header class="main-header">
-        <h1 id="titulo-principal"></h1>
-        <div class="botoes-controle">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
-                <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
-                <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
-                <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
-            </div>
-            <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
-            <button id="btn-editar" class="botao">Editar</button>
-            <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
-        </div>
-    </header>
+<body class="vista-diaria">
 
     <main class="agenda-container">
         <div class="dias-semana" id="container-dias"></div>
     </main>
-    
+
     <div id="toast" class="toast"></div>
 
     <div id="modal-copiar" class="modal-overlay">
@@ -42,15 +27,13 @@
         </div>
     </div>
 
-    <!-- Scripts do Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
     <script src="script.js"></script>
+
     <script type="module">
         import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
         const el = document.createElement('pwa-update');
         document.body.appendChild(el);
     </script>
+
 </body>
 </html>
