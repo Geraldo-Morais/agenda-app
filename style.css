@@ -134,3 +134,35 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
 .btn-copiar-dia:hover { background-color: var(--cor-destaque); color: white; border-color: var(--cor-destaque); }
 .modal-conteudo .botao { margin-top: 1rem; width: 100%; }
 .modal-conteudo .botao-secundario { margin-top: 0.5rem; }
+
+@media (max-width: 768px) {
+    /* Deixa o layout do corpo rolar no celular, se precisar */
+    body {
+        overflow: auto;
+    }
+    
+    /* Reorganiza o cabeçalho */
+    .main-header {
+        flex-wrap: wrap; /* Permite que os itens quebrem a linha */
+        justify-content: center; /* Centraliza tudo quando quebrar a linha */
+        gap: 0.5rem;
+    }
+
+    .botoes-controle {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    /* Esconde botões menos usados no celular para limpar a interface */
+    #btn-exportar,
+    #btn-resetar {
+        display: none !important;
+    }
+
+    /* Diminui um pouco os botões principais no celular */
+    .botao {
+        padding: 0.4rem 0.8rem;
+        min-width: initial; /* Remove a largura mínima */
+        font-size: 0.9rem;
+    }
+}
