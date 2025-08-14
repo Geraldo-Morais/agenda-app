@@ -12,41 +12,45 @@
 </head>
 <body>
 
-    <div id="app-view">
-        <header class="main-header">
-            <h1 id="titulo-principal"></h1>
-            <div class="botoes-controle">
-                <div class="theme-switcher">
-                    <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
-                    <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
-                    <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
-                    <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
-                </div>
-                <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
-                <button id="btn-editar" class="botao">Editar</button>
-                <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
+    <header class="main-header">
+        <h1 id="titulo-principal"></h1>
+        <div class="botoes-controle">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
+                <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
+                <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
+                <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
             </div>
-        </header>
+            <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
+            <button id="btn-editar" class="botao">Editar</button>
+            <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
+        </div>
+    </header>
 
-        <main class="agenda-container">
-            <div class="dias-semana" id="container-dias"></div>
-        </main>
-        
-        <div id="toast" class="toast"></div>
+    <main class="agenda-container">
+        <div class="dias-semana" id="container-dias"></div>
+    </main>
+    
+    <div id="toast" class="toast"></div>
 
-        <div id="modal-copiar" class="modal-overlay">
-            <div class="modal-conteudo">
-                <h3>Copiar atividades de:</h3>
-                <ul id="lista-dias-copia"></ul>
-                <button id="btn-add-avulso" class="botao">Adicionar Tarefa em Branco</button>
-                <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
-            </div>
+    <div id="modal-copiar" class="modal-overlay">
+        <div class="modal-conteudo">
+            <h3>Copiar atividades de:</h3>
+            <ul id="lista-dias-copia"></ul>
+            <button id="btn-add-avulso" class="botao">Adicionar Tarefa em Branco</button>
+            <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
         </div>
     </div>
 
+    <!-- Scripts do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script src="script.js"></script>
+    <script type="module">
+        import 'https://cdn.jsdelivr.net/npm/@pwabuilder/pwaupdate';
+        const el = document.createElement('pwa-update');
+        document.body.appendChild(el);
+    </script>
 </body>
 </html>
