@@ -281,12 +281,12 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
         margin-left: 0.25rem;
     }
 }
+
 /* --- ESTILO PARA O INTERRUPTOR DE SINCRONIZAÇÃO --- */
 .sync-container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-right: 1rem; /* Ajuste o espaçamento se necessário */
 }
 
 .sync-label {
@@ -295,7 +295,6 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
     font-weight: 500;
 }
 
-/* O container do interruptor */
 .switch {
     position: relative;
     display: inline-block;
@@ -303,14 +302,12 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
     height: 28px;
 }
 
-/* Esconde o checkbox padrão do HTML */
 .switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-/* A parte visual que desliza (o fundo) */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -324,7 +321,6 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
     border-radius: 28px;
 }
 
-/* O círculo branco que se move */
 .slider:before {
     position: absolute;
     content: "";
@@ -338,7 +334,6 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
     border-radius: 50%;
 }
 
-/* Lógica de mudança de cor e posição quando ATIVADO */
 input:checked + .slider {
     background-color: var(--cor-destaque);
 }
@@ -351,4 +346,62 @@ input:checked + .slider:before {
     -webkit-transform: translateX(22px);
     -ms-transform: translateX(22px);
     transform: translateX(22px);
+}
+
+/* --- ESTILOS PARA O MENU DE CONFIGURAÇÕES --- */
+.settings-menu-container {
+    position: relative; /* Essencial para posicionar o dropdown */
+    display: inline-block;
+}
+
+.botao-icone {
+    background-color: transparent;
+    border: 1px solid var(--cor-borda-botao);
+    border-radius: 50%; /* Deixa o botão redondo */
+    color: var(--cor-texto-botao);
+    width: 42px;
+    height: 42px;
+    font-size: 1.5rem; /* Tamanho do ícone de engrenagem */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.botao-icone:hover {
+    border-color: var(--cor-destaque);
+    transform: rotate(45deg); /* Gira a engrenagem ao passar o mouse */
+}
+
+.settings-dropdown {
+    display: none; /* Escondido por padrão */
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px); /* Posiciona abaixo do botão com um espaçamento */
+    background-color: var(--cor-dia-fundo);
+    border: 1px solid var(--cor-borda-botao);
+    border-radius: var(--borda-arredondada);
+    box-shadow: var(--sombra);
+    padding: 1rem;
+    z-index: 100;
+    width: 280px; /* Largura do menu */
+}
+
+.settings-dropdown.visivel {
+    display: block; /* Mostra o menu quando a classe .visivel é adicionada */
+    animation: fadeIn 0.3s ease;
+}
+
+/* Ajustes nos itens dentro do dropdown */
+.settings-dropdown .sync-container {
+    margin-bottom: 1rem;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.settings-dropdown .theme-switcher {
+    border: none;
+    padding: 0;
+    justify-content: space-around;
 }
