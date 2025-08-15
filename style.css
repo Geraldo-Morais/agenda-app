@@ -62,27 +62,8 @@ body {
 .botao-secundario { background-color: transparent; border: none; color: var(--cor-texto-botao); cursor: pointer; font-size: 0.9rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s; white-space: nowrap; }
 .botao-secundario:hover { opacity: 1; text-decoration: underline; }
 
-/* Spinner de Carregamento no Botão Salvar */
-.botao .spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
-    border: 3px solid currentColor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-.botao.loading .spinner {
-    opacity: 1;
-}
-.botao.loading .button-text {
-    opacity: 0;
-}
+/* Spinner de Carregamento no Botão Salvar (agora obsoleto, mas mantido) */
+.botao .spinner { display: none; }
 
 /* Layout da Agenda */
 .agenda-container { max-width: 1400px; width: 100%; margin: 1rem auto 1.5rem; padding: 0 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
@@ -147,7 +128,25 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
 .toast.info { background-color: #17a2b8; }
 
 /* Loader */
-.loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--cor-fundo); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.3s ease; }
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.loader-overlay.ativo {
+    opacity: 1;
+    pointer-events: auto;
+}
 .loader-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: var(--cor-destaque); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
 
 /* --- TEMAS DE CORES E MODO ESCURO (COM AJUSTES DE CONTRASTE) --- */
