@@ -320,3 +320,20 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
         font-size: 1.1rem;
     }
 }
+.titulo-container {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+#app-version {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: #aaa;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+[data-theme="dark"] #app-version {
+    color: #666;
+}
