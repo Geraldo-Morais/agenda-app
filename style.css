@@ -104,7 +104,7 @@ body {
 .botao:active { transform: scale(0.98); }
 
 #btn-settings {
-    min-width: auto; /* Permite que o botão se ajuste ao conteúdo */
+    min-width: auto;
     width: 50px;
 }
 
@@ -127,7 +127,12 @@ body {
 .conteudo-dia { position: relative; z-index: 2; flex-grow: 1; display: flex; flex-direction: column; }
 .dia h2 { font-weight: 500; font-size: 1.1rem; }
 .dia.hoje { border: 2px solid var(--cor-destaque); transform: scale(1.02); }
-.dia ul { list-style: none; padding-left: 0; }
+.dia ul { 
+    list-style: none; 
+    padding-left: 0;
+    /* CORREÇÃO 3: Adiciona espaçamento no final da lista de atividades */
+    padding-bottom: 2rem;
+}
 .dia.dia-concluido { background-color: var(--cor-verde-concluido); }
 .titulo-dia-container { border-bottom-color: var(--cor-borda-1); }
 #domingo .titulo-dia-container, #quinta .titulo-dia-container { border-color: var(--cor-borda-1); }
@@ -185,9 +190,20 @@ body {
 /* Modals */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
 .modal-overlay.visivel { display: flex; }
-.modal-conteudo { background-color: var(--cor-dia-fundo); color: var(--cor-texto); padding: 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); width: 90%; max-width: 400px; text-align: center; position: relative; }
+/* CORREÇÃO 2: Ajuste no tamanho e posicionamento do conteúdo do modal */
+.modal-conteudo { 
+    background-color: var(--cor-dia-fundo); 
+    color: var(--cor-texto); 
+    padding: 2rem; 
+    border-radius: var(--borda-arredondada); 
+    box-shadow: var(--sombra-hover); 
+    width: 90%; 
+    max-width: 350px; /* Reduz a largura máxima para ficar mais 'bonitinho' */
+    text-align: center; 
+    position: relative; 
+}
 .modal-conteudo h3 { margin-top: 0; margin-bottom: 1.5rem; }
-.botao-fechar-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--cor-texto-botao); }
+.botao-fechar-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--cor-texto-botao); z-index: 210; }
 #lista-dias-copia { list-style: none; padding: 0; margin: 0 0 1.5rem 0; }
 #lista-dias-copia li { margin-bottom: 0.75rem; }
 .btn-copiar-dia { width: 100%; background-color: var(--cor-fundo); color: var(--cor-texto-botao); border: 1px solid var(--cor-borda-botao); padding: 0.75rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.2s ease; }
@@ -216,7 +232,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 /* Media Queries (Responsividade) */
 @media (max-width: 767px) {
     body {
-        overflow-y: auto; /* Permite scroll no celular */
+        overflow-y: auto; 
     }
     .main-header { 
         padding: 0.75rem 1rem 0; 
@@ -225,7 +241,6 @@ input:checked + .slider:before { transform: translateX(22px); }
         font-size: 1.2rem; 
     }
     
-    /* --- CORREÇÃO DO LAYOUT DOS CARDS --- */
     .agenda-container {
         width: 100%;
         max-width: 100%;
@@ -237,7 +252,6 @@ input:checked + .slider:before { transform: translateX(22px); }
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
-    /* --- FIM DA CORREÇÃO --- */
 
     .dia { 
         min-height: 320px; 
