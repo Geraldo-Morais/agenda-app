@@ -141,7 +141,7 @@ body {
 .atividade { background-color: rgba(241, 243, 245, 0.85); backdrop-filter: blur(2px); padding: 0.6rem 0.8rem; border-radius: calc(var(--borda-arredondada) - 4px); margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.9rem; border-left: 4px solid transparent; transition: all 0.3s ease; animation: fadeIn 0.4s ease; }
 .atividade.agora { background-color: var(--cor-destaque); color: white; border-left: 4px solid var(--cor-destaque); }
 .atividade.agora .horario { color: rgba(255, 255, 255, 0.85); }
-.atividade.conclida { opacity: 0.6; }
+.atividade.concluida { opacity: 0.6; }
 .atividade.concluida .descricao { text-decoration: line-through; text-decoration-thickness: 2px; }
 .atividade .descricao { font-weight: 500; }
 .atividade .horario { font-size: 0.85rem; color: #6c757d; }
@@ -174,7 +174,6 @@ body {
 .modal-overlay.visivel { display: flex; }
 .modal-conteudo { background-color: var(--cor-dia-fundo); color: var(--cor-texto); padding: 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); width: calc(100% - 40px); max-width: 420px; text-align: center; position: relative; display: flex; flex-direction: column; }
 .modal-conteudo h3 { margin-top: 0; margin-bottom: 1.5rem; }
-/* ESTILO CORRIGIDO DO BOTÃO 'X' */
 .botao-fechar-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: 1px solid transparent; font-size: 1.5rem; cursor: pointer; color: var(--cor-texto-botao); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
 .botao-fechar-modal:hover { background-color: var(--cor-vermelho-rem); color: white; border-color: var(--cor-vermelho-rem); }
 
@@ -188,6 +187,42 @@ body {
 .atividade-editavel-modal .input-horario { width: 90px; }
 .btn-remover-modal { background-color: transparent; border: 1px solid var(--cor-borda-botao); color: var(--cor-texto-botao); font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all 0.2s ease; width: 36px; height: 36px; font-size: 1.2rem; }
 .btn-remover-modal:hover { background-color: var(--cor-vermelho-rem); border-color: var(--cor-vermelho-rem); color: white; }
+
+/* --- NOVO ESTILO PARA TELA DE CÓPIA --- */
+.container-copia {
+    padding: 1rem 0;
+}
+.container-copia p {
+    margin: 0.5rem 0 1rem 0;
+    color: var(--cor-texto-botao);
+}
+.lista-dias-copia-modal {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.lista-dias-copia-modal .botao-copia {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-botao);
+    border: 1px solid var(--cor-borda-botao);
+    padding: 0.5rem 1rem;
+    border-radius: var(--borda-arredondada);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.lista-dias-copia-modal .botao-copia:hover {
+    background-color: var(--cor-destaque);
+    border-color: var(--cor-destaque);
+    color: white;
+}
+/* --- FIM DO NOVO ESTILO --- */
+
 .rodape-modal-edicao { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
 .botoes-acao-modal { display: flex; gap: 0.5rem; }
 .botao-modal { padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 500; border-radius: var(--borda-arredondada); border: 1px solid var(--cor-borda-botao); background-color: transparent; color: var(--cor-texto-botao); cursor: pointer; transition: all 0.2s ease; }
