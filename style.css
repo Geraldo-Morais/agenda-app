@@ -179,9 +179,10 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
     }
     .agenda-container {
         width: 100%;
+        max-width: 100%;
         padding: 0 1rem;
-        margin: 1rem 0;
-        box-sizing: border-box;
+        margin: 1rem auto;
+        box-sizing: border-box; 
     }
     .dias-semana {
         grid-template-columns: repeat(2, 1fr);
