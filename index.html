@@ -23,23 +23,29 @@
     <header class="main-header" style="display: none;">
         <h1 id="titulo-principal"></h1>
         <div class="botoes-controle">
-            <div class="sync-container">
-                <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
-                <label class="switch">
-                    <input type="checkbox" id="sync-theme-checkbox">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
-                <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
-                <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
-                <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
-            </div>
             <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
-            <button id="btn-editar" class="botao">Editar</button>
             <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
-        </div>
+            <button id="btn-editar" class="botao">Editar</button>
+
+            <div class="settings-menu-container">
+                <button id="btn-settings" class="botao-icone">⚙️</button>
+                <div id="settings-dropdown" class="settings-dropdown">
+                    <div class="sync-container">
+                        <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sync-theme-checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="theme-switcher">
+                        <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
+                        <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
+                        <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
+                        <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
+                    </div>
+                </div>
+            </div>
+             </div>
     </header>
 
     <main class="agenda-container" style="display: none;">
