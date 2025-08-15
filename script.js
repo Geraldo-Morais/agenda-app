@@ -40,14 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let agenda = {};
     let destaqueInterval;
 
-    function getChaveDeHoje() {
-        const hoje = new Date();
-        const ano = hoje.getFullYear();
-        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-        const dia = String(hoje.getDate()).padStart(2, '0');
-        return `${ano}-${mes}-${dia}`;
-    }
-
+    function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
+    
     const concluidasDocRef = db.collection('concluidas').doc(getChaveDeHoje());
 
     async function salvarConcluidas() {
@@ -56,16 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
             await concluidasDocRef.set({ ids: concluidasIds });
         } catch (error) {
             console.error("Erro ao salvar tarefas concluídas: ", error);
+            mostrarToast("Erro ao sincronizar progresso.", "info");
         }
     }
 
     function aplicarConcluidas(ids = []) {
         document.querySelectorAll('.atividade').forEach(el => {
-            if (ids.includes(el.dataset.id)) {
-                el.classList.add('concluida');
-            } else {
-                el.classList.remove('concluida');
-            }
+            const deveEstarConcluida = ids.includes(el.dataset.id);
+            el.classList.toggle('concluida', deveEstarConcluida);
         });
         mapaDosDias.forEach(verificarConclusaoDia);
     }
@@ -183,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnResetar) {
         btnResetar.addEventListener('click', async () => {
             const confirmou = confirm('Tem certeza que deseja apagar TODAS as suas alterações e voltar para a rotina padrão?');
-            if (confirmou) { try { await agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; renderizarAgenda(); mostrarToast('Agenda restaurada para o padrão!'); } catch (error) { mostrarToast('Erro ao resetar a agenda.', 'info'); } }
+            if (confirmou) { try { await agendaDocRef.set(agendaPadrao); await concluidasDocRef.set({ids: []}); mostrarToast('Agenda restaurada para o padrão!'); } catch (error) { mostrarToast('Erro ao resetar a agenda.', 'info'); } }
         });
     }
 
@@ -220,8 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, (error) => {
             console.error("Erro ao ouvir a agenda principal: ", error);
-            mostrarToast("Erro de conexão. Usando dados locais.", "info");
-            agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao;
+            mostrarToast("Erro de conexão com a agenda online.", "info");
+            agenda = agendaPadrao;
             renderizarAgenda();
         });
 
