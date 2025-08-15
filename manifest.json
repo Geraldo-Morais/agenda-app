@@ -1,7 +1,8 @@
 {
   "name": "Agenda da Bea",
   "short_name": "Agenda",
-  "start_url": ".",
+  "id": "/agenda-app/",
+  "start_url": "/agenda-app/index.html",
   "display": "standalone",
   "background_color": "#fdf6f8",
   "theme_color": "#e91e63",
