@@ -49,21 +49,42 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Novo Título Principal */
+.titulo-principal-container {
+    background-color: var(--cor-dia-fundo);
+    text-align: center;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-bottom: 1px solid var(--cor-borda-botao);
+}
+#titulo-principal {
+    font-weight: 500;
+    font-size: 1.5rem;
+    color: var(--cor-texto);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
 /* Cabeçalho e Botões */
-.main-header { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; width: 100%; margin: 1.5rem auto 0; padding: 0 1.5rem; }
-.titulo-container { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
-#app-version { font-size: 0.7rem; font-weight: 400; color: var(--cor-texto-botao); opacity: 0.7; white-space: nowrap; }
-.main-header h1 { font-weight: 500; font-size: 1.25rem; color: var(--cor-texto); transition: color 0.3s ease; }
+.main-header { 
+    display: flex; 
+    justify-content: flex-end; /* Alinha os botões à direita */
+    align-items: center; 
+    max-width: 1400px; 
+    width: 100%; 
+    margin: 1rem auto 0; 
+    padding: 0 1.5rem; 
+}
+
 .botoes-controle { display: flex; align-items: center; gap: 1rem; }
-.botao { background-color: transparent; padding: 0.5rem 1rem; border: 1px solid var(--cor-borda-botao); border-radius: var(--borda-arredondada); color: var(--cor-texto-botao); text-decoration: none; font-weight: 500; transition: all 0.2s ease; min-width: 175px; text-align: center; cursor: pointer; font-family: 'Roboto', sans-serif; font-size: 1rem; line-height: 1.5; position: relative; }
+.botao { background-color: transparent; padding: 0.5rem 1rem; border: 1px solid var(--cor-borda-botao); border-radius: var(--borda-arredondada); color: var(--cor-texto-botao); text-decoration: none; font-weight: 500; transition: all 0.2s ease; min-width: 120px; text-align: center; cursor: pointer; font-family: 'Roboto', sans-serif; font-size: 1rem; line-height: 1.5; position: relative; }
 .botao:hover { background-color: var(--cor-dia-fundo); border-color: var(--cor-destaque); }
 .botao.salvar { border-color: var(--cor-destaque); color: var(--cor-destaque); font-weight: 700; }
 .botao:active { transform: scale(0.98); }
 .botao-secundario { background-color: transparent; border: none; color: var(--cor-texto-botao); cursor: pointer; font-size: 0.9rem; padding: 0.5rem; opacity: 0.7; transition: opacity 0.2s; white-space: nowrap; }
 .botao-secundario:hover { opacity: 1; text-decoration: underline; }
-
-/* Spinner de Carregamento no Botão Salvar (agora obsoleto, mas mantido) */
-.botao .spinner { display: none; }
 
 /* Layout da Agenda */
 .agenda-container { max-width: 1400px; width: 100%; margin: 1rem auto 1.5rem; padding: 0 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
@@ -94,7 +115,15 @@ body {
 
 /* Estilo e Animação de Fade-in/out das Atividades */
 .atividade { background-color: rgba(241, 243, 245, 0.85); backdrop-filter: blur(2px); padding: 0.6rem 0.8rem; border-radius: calc(var(--borda-arredondada) - 4px); margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.9rem; border-left: 4px solid transparent; transition: all 0.3s ease; animation: fadeIn 0.4s ease; }
-.atividade.agora { background-color: var(--cor-borda-2); border-left: 4px solid var(--cor-destaque); }
+/* CORREÇÃO BUG DESTAQUE */
+.atividade.agora { 
+    background-color: var(--cor-destaque);
+    color: white;
+    border-left: 4px solid var(--cor-destaque);
+}
+.atividade.agora .horario {
+    color: rgba(255, 255, 255, 0.85);
+}
 .atividade.concluida { opacity: 0.6; }
 .atividade.concluida .descricao { text-decoration: line-through; text-decoration-thickness: 2px; }
 .atividade .descricao { font-weight: 500; }
@@ -150,7 +179,7 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
 .loader-spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: var(--cor-destaque); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
 
 /* --- TEMAS DE CORES E MODO ESCURO (COM AJUSTES DE CONTRASTE) --- */
-.theme-switcher { display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--cor-borda-botao); padding: 4px; border-radius: 20px; transition: border-color 0.3s ease; }
+.theme-switcher { display: flex; align-items: center; gap: 0.5rem; transition: border-color 0.3s ease; }
 .theme-btn { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s ease; }
 .theme-btn:hover { transform: scale(1.1); }
 .theme-btn[data-theme-set="default"] { background-color: #ffcdd2; }
@@ -160,12 +189,26 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
 
 [data-theme="sunset"] { --cor-fundo: #fff3e0; --cor-texto: #6d4c41; --cor-dia-fundo: #ffe0b2; --cor-destaque: #ff7043; --cor-numero-dia: rgba(255, 112, 67, 0.1); --cor-borda-botao: #ffccbc; --cor-texto-botao: #bf360c; --cor-borda-1: #ffab91; --cor-borda-2: #ff8a65; --cor-borda-3: #ff7043; --cor-borda-4: #ff5722; }
 [data-theme="ocean"] { --cor-fundo: #e0f7fa; --cor-texto: #004d40; --cor-dia-fundo: #b2ebf2; --cor-destaque: #0097a7; --cor-numero-dia: rgba(0, 151, 167, 0.1); --cor-borda-botao: #80deea; --cor-texto-botao: #006064; --cor-borda-1: #4dd0e1; --cor-borda-2: #26c6da; --cor-borda-3: #00bcd4; --cor-borda-4: #00acc1; }
-[data-theme="dark"] { --cor-fundo: #000000; --cor-texto: #e8e8e8; --cor-dia-fundo: #1c1c1e; --cor-borda-botao: #444; --cor-texto-botao: #c7c7c7; --cor-destaque: #0a84ff; --cor-verde-concluido: #1c331e; --cor-numero-dia: rgba(10, 132, 255, 0.1); --cor-borda-1: #5c4141; --cor-borda-2: #5e523a; --cor-borda-3: #33425a; --cor-borda-4: #3c5a3e; }
+[data-theme="dark"] { --cor-fundo: #121212; --cor-texto: #e8e8e8; --cor-dia-fundo: #1c1c1e; --cor-borda-botao: #444; --cor-texto-botao: #c7c7c7; --cor-destaque: #0a84ff; --cor-verde-concluido: #1c331e; --cor-numero-dia: rgba(10, 132, 255, 0.1); --cor-borda-1: #5c4141; --cor-borda-2: #5e523a; --cor-borda-3: #33425a; --cor-borda-4: #3c5a3e; }
 [data-theme="dark"] .atividade { background-color: rgba(60, 60, 62, 0.85); color: #e8e8e8; }
 [data-theme="dark"] .atividade .horario { color: #8e8e93; }
 [data-theme="dark"] .botao:hover { background-color: #2c2c2e; }
 [data-theme="dark"] .titulo-dia-container { border-bottom-color: #333; }
 [data-theme="dark"] input { background-color: #2c2c2e; color: #f2f2f7; border-color: #444; }
+/* CORREÇÃO BUG DESTAQUE MODO ESCURO */
+[data-theme="dark"] .atividade.agora {
+    background-color: #E9E9EB; /* Fundo quase branco */
+    color: #1C1C1E; /* Texto escuro para contraste */
+    border-left-color: var(--cor-destaque);
+}
+[data-theme="dark"] .atividade.agora .horario {
+    color: #333;
+}
+[data-theme="dark"] .titulo-principal-container {
+    background-color: #1c1c1e;
+    border-bottom-color: #333;
+}
+
 
 /* Modal de Cópia */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(5px); }
@@ -185,16 +228,21 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
         overflow-y: auto;
         overflow-x: hidden;
     }
+    #titulo-principal {
+        font-size: 1.2rem;
+    }
     .main-header {
+        margin-top: 0.75rem;
+        padding: 0 1rem;
         flex-direction: column;
         gap: 1rem;
-        margin-top: 1rem;
-        padding: 0 1rem;
     }
     .botoes-controle {
         flex-wrap: wrap;
         justify-content: center;
         gap: 0.5rem;
+        width: 100%;
+        justify-content: flex-end;
     }
     .botao-secundario {
         display: none !important;
@@ -350,18 +398,18 @@ input:checked + .slider:before {
 
 /* --- ESTILOS PARA O MENU DE CONFIGURAÇÕES --- */
 .settings-menu-container {
-    position: relative; /* Essencial para posicionar o dropdown */
+    position: relative; 
     display: inline-block;
 }
 
 .botao-icone {
     background-color: transparent;
     border: 1px solid var(--cor-borda-botao);
-    border-radius: 50%; /* Deixa o botão redondo */
+    border-radius: 50%; 
     color: var(--cor-texto-botao);
     width: 42px;
     height: 42px;
-    font-size: 1.5rem; /* Tamanho do ícone de engrenagem */
+    font-size: 1.5rem; 
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -371,29 +419,28 @@ input:checked + .slider:before {
 
 .botao-icone:hover {
     border-color: var(--cor-destaque);
-    transform: rotate(45deg); /* Gira a engrenagem ao passar o mouse */
+    transform: rotate(45deg); 
 }
 
 .settings-dropdown {
-    display: none; /* Escondido por padrão */
+    display: none; 
     position: absolute;
     right: 0;
-    top: calc(100% + 10px); /* Posiciona abaixo do botão com um espaçamento */
+    top: calc(100% + 10px); 
     background-color: var(--cor-dia-fundo);
     border: 1px solid var(--cor-borda-botao);
     border-radius: var(--borda-arredondada);
     box-shadow: var(--sombra);
     padding: 1rem;
     z-index: 100;
-    width: 280px; /* Largura do menu */
+    width: 280px; 
 }
 
 .settings-dropdown.visivel {
-    display: block; /* Mostra o menu quando a classe .visivel é adicionada */
+    display: block; 
     animation: fadeIn 0.3s ease;
 }
 
-/* Ajustes nos itens dentro do dropdown */
 .settings-dropdown .sync-container {
     margin-bottom: 1rem;
     justify-content: space-between;
