@@ -25,28 +25,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     
-    const mensagensFofas = [ 'Você conseguiu, Bea! <3', 'Dia concluído com sucesso, Bezinha! ✨', 'Parabéns, Amor! Todas as tarefas foram feitas! 🎉', 'Você é incrível, B! Mais um dia perfeito! ❤️', 'Isso aí, meu bem! Dia finalizado com maestria! 🥂' ];
+    const mensagensFofas = ['Você conseguiu, Bea! <3','Dia concluído com sucesso, Bezinha! ✨','Parabéns, Amor! Todas as tarefas foram feitas! 🎉','Você é incrível, B! Mais um dia perfeito! ❤️','Isso aí, meu bem! Dia finalizado com maestria! 🥂'];
 
     const agendaPadrao = {
         domingo: [{ id: 'dom-descanso', descricao: 'Dia de descanso', inicio: '', fim: '' }],
-        segunda: [ { id: 'seg-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' }, { id: 'seg-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' }, { id: 'seg-revisao', descricao: 'Revisão Front', inicio: '16:30', fim: '18:00' }, { id: 'seg-contratos', descricao: 'Teoria Geral dos Contratos', inicio: '19:00', fim: '22:00' }, ],
-        terca: [ { id: 'ter-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' }, { id: 'ter-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' }, { id: 'ter-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'ter-democratica', descricao: 'Instruções Democráticas', inicio: '18:30', fim: '20:10' }, { id: 'ter-atividades', descricao: 'Atividades práticas', inicio: '', fim: '' }, ],
-        quarta: [ { id: 'qua-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' }, { id: 'qua-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' }, { id: 'qua-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'qua-tutelas', descricao: 'Tutelas Provisórias', inicio: '18:30', fim: '20:10' }, { id: 'qua-civil', descricao: 'Responsabilidade Civil', inicio: '20:20', fim: '22:00' }, ],
-        quinta: [ { id: 'qui-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' }, { id: 'qui-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' }, { id: 'qui-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'qui-negocios', descricao: 'Direito dos Negócios', inicio: '18:30', fim: '21:00' }, ],
-        sexta: [ { id: 'sex-exercicio', descricao: 'Exercício', inicio: '06:30', fim: '07:30' }, { id: 'sex-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:00' }, { id: 'sex-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' }, { id: 'sex-crimes', descricao: 'Crimes em Espécie', inicio: '18:30', fim: '20:10' }, { id: 'sex-teclado', descricao: 'Teclado', inicio: '21:30', fim: '22:30' }, ],
-        sabado: [ { id: 'sab-piano', descricao: 'Aulas Piano', inicio: '10:00', fim: '11:00' }, { id: 'sab-org', descricao: 'Organização pessoal', inicio: '13:00', fim: '16:00' }, ],
+        segunda: [{ id: 'seg-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' },{ id: 'seg-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' },{ id: 'seg-revisao', descricao: 'Revisão Front', inicio: '16:30', fim: '18:00' },{ id: 'seg-contratos', descricao: 'Teoria Geral dos Contratos', inicio: '19:00', fim: '22:00' }],
+        terca: [{ id: 'ter-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' },{ id: 'ter-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' },{ id: 'ter-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' },{ id: 'ter-democratica', descricao: 'Instruções Democráticas', inicio: '18:30', fim: '20:10' },{ id: 'ter-atividades', descricao: 'Atividades práticas', inicio: '', fim: '' }],
+        quarta: [{ id: 'qua-exercicios', descricao: 'Exercícios', inicio: '06:30', fim: '07:30' },{ id: 'qua-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:30' },{ id: 'qua-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' },{ id: 'qua-tutelas', descricao: 'Tutelas Provisórias', inicio: '18:30', fim: '20:10' },{ id: 'qua-civil', descricao: 'Responsabilidade Civil', inicio: '20:20', fim: '22:00' }],
+        quinta: [{ id: 'qui-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' },{ id: 'qui-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' },{ id: 'qui-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' },{ id: 'qui-negocios', descricao: 'Direito dos Negócios', inicio: '18:30', fim: '21:00' }],
+        sexta: [{ id: 'sex-exercicio', descricao: 'Exercício', inicio: '06:30', fim: '07:30' },{ id: 'sex-estagio', descricao: 'Estágio', inicio: '09:00', fim: '15:00' },{ id: 'sex-revisao', descricao: 'Revisão', inicio: '16:30', fim: '18:00' },{ id: 'sex-crimes', descricao: 'Crimes em Espécie', inicio: '18:30', fim: '20:10' },{ id: 'sex-teclado', descricao: 'Teclado', inicio: '21:30', fim: '22:30' }],
+        sabado: [{ id: 'sab-piano', descricao: 'Aulas Piano', inicio: '10:00', fim: '11:00' },{ id: 'sab-org', descricao: 'Organização pessoal', inicio: '13:00', fim: '16:00' }]
     };
     let agenda = {};
     let destaqueInterval;
     let concluidasListener = null;
+    let ultimaConcluidasIds = [];
+    let concluidasDocRef = null;
 
-    function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
+    function getChaveDeHoje() {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        return `${ano}-${mes}-${dia}`;
+    }
     
-    async function salvarConcluidas() { const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); try { await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); } catch (error) { console.error("Erro ao salvar tarefas concluídas: ", error); } }
-    function aplicarConcluidas(ids = []) { document.querySelectorAll('.atividade').forEach(el => { el.classList.toggle('concluida', ids.includes(el.dataset.id)); }); mapaDosDias.forEach(verificarConclusaoDia); }
-    function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
-    function verificarConclusaoDia(nomeDia) { const diaEl = document.getElementById(nomeDia); if (!diaEl) return; const totalAtividades = (agenda[nomeDia] || []).filter(atv => atv.descricao && atv.descricao !== 'Dia de descanso').length; const atividadesConcluidas = diaEl.querySelectorAll('.atividade.concluida').length; const estavaConcluido = diaEl.classList.contains('dia-concluido'); if (totalAtividades > 0 && totalAtividades === atividadesConcluidas) { diaEl.classList.add('dia-concluido'); if (!estavaConcluido) { const mensagemAleatoria = mensagensFofas[Math.floor(Math.random() * mensagensFofas.length)]; mostrarToast(mensagemAleatoria, 'info'); } } else { diaEl.classList.remove('dia-concluido'); } }
-    function destacarAtividadeAtual() { const agora = new Date(); const nomeDiaHoje = mapaDosDias[agora.getDay()]; document.querySelectorAll('.atividade.agora').forEach(el => el.classList.remove('agora')); const atividadesDeHoje = agenda[nomeDiaHoje] || []; const horaAtual = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`; for (const atividade of atividadesDeHoje) { if (atividade.inicio && atividade.fim && horaAtual >= atividade.inicio && horaAtual <= atividade.fim) { const atividadeEl = document.querySelector(`.atividade[data-id="${atividade.id}"]`); if (atividadeEl) atividadeEl.classList.add('agora'); break; } } }
+    async function salvarConcluidas() {
+        const ids = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id);
+        try {
+            await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids });
+            ultimaConcluidasIds = ids;
+        } catch (error) {
+            console.error("Erro ao salvar tarefas concluídas: ", error);
+            mostrarToast("Erro ao sincronizar progresso.", "info");
+        }
+    }
+
+    function aplicarConcluidas(ids = []) {
+        document.querySelectorAll('.atividade').forEach(el => {
+            el.classList.toggle('concluida', ids.includes(el.dataset.id));
+        });
+        mapaDosDias.forEach(verificarConclusaoDia);
+    }
+
+    function mostrarToast(mensagem, tipo = 'sucesso') {
+        if (!toastEl) return;
+        toastEl.textContent = mensagem;
+        toastEl.className = 'toast';
+        toastEl.classList.add(tipo);
+        toastEl.classList.add('show');
+        setTimeout(() => { toastEl.classList.remove('show'); }, 4000);
+    }
+
+    function verificarConclusaoDia(nomeDia) {
+        const diaEl = document.getElementById(nomeDia);
+        if (!diaEl) return;
+        const totalAtividades = (agenda[nomeDia] || []).filter(atv => atv.descricao && atv.descricao !== 'Dia de descanso').length;
+        const atividadesConcluidas = diaEl.querySelectorAll('.atividade.concluida').length;
+        const estavaConcluido = diaEl.classList.contains('dia-concluido');
+        if (totalAtividades > 0 && totalAtividades === atividadesConcluidas) {
+            diaEl.classList.add('dia-concluido');
+            if (!estavaConcluido) {
+                const mensagemAleatoria = mensagensFofas[Math.floor(Math.random() * mensagensFofas.length)];
+                mostrarToast(mensagemAleatoria, 'info');
+            }
+        } else {
+            diaEl.classList.remove('dia-concluido');
+        }
+    }
+
+    function destacarAtividadeAtual() {
+        const agora = new Date();
+        const nomeDiaHoje = mapaDosDias[agora.getDay()];
+        document.querySelectorAll('.atividade.agora').forEach(el => el.classList.remove('agora'));
+        const atividadesDeHoje = agenda[nomeDiaHoje] || [];
+        const horaAtual = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+        for (const atividade of atividadesDeHoje) {
+            if (atividade.inicio && atividade.fim && horaAtual >= atividade.inicio && horaAtual <= atividade.fim) {
+                const atividadeEl = document.querySelector(`.atividade[data-id="${atividade.id}"]`);
+                if (atividadeEl) atividadeEl.classList.add('agora');
+                break;
+            }
+        }
+    }
 
     function renderizarAgenda() {
         if (!containerDias) return;
@@ -119,9 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         itemLista.className = 'atividade';
                         const horario = atividade.inicio && atividade.fim ? `${atividade.inicio} - ${atividade.fim}` : (atividade.inicio || '');
                         itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${horario}</span>`;
-                        itemLista.addEventListener('click', (e) => {
+                        itemLista.addEventListener('click', () => {
                             itemLista.classList.toggle('concluida');
                             salvarConcluidas();
+                            verificarConclusaoDia(nomeDia);
                         });
                     }
                     listaAtividades.appendChild(itemLista);
@@ -131,24 +193,115 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
         });
-        if (modoEdicao) { document.querySelectorAll('.btn-remover').forEach(btn => btn.addEventListener('click', removerAtividade)); }
+        if (modoEdicao) {
+            document.querySelectorAll('.btn-remover').forEach(btn => btn.addEventListener('click', removerAtividade));
+        }
+        if (ultimaConcluidasIds && ultimaConcluidasIds.length) {
+            setTimeout(() => aplicarConcluidas(ultimaConcluidasIds), 0);
+        }
+        if (!modoEdicao) destacarAtividadeAtual();
     }
     
-    function abrirModalCopia(diaDestino) { if (!modalCopiar || !listaDiasCopia) return; listaDiasCopia.innerHTML = ''; modalCopiar.dataset.diaDestino = diaDestino; mapaDosDias.forEach(nomeDiaFonte => { if (nomeDiaFonte !== diaDestino && agenda[nomeDiaFonte] && agenda[nomeDiaFonte].length > 0 && agenda[nomeDiaFonte].some(atv => atv.descricao !== 'Dia de descanso')) { const itemLista = document.createElement('li'); const botaoDia = document.createElement('button'); botaoDia.className = 'btn-copiar-dia'; botaoDia.dataset.diaFonte = nomeDiaFonte; let nomeCapitalizado = nomeDiaFonte.charAt(0).toUpperCase() + nomeDiaFonte.slice(1); botaoDia.textContent = (nomeDiaFonte !== 'sabado' && nomeDiaFonte !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado; itemLista.appendChild(botaoDia); listaDiasCopia.appendChild(itemLista); } }); modalCopiar.classList.add('visivel'); }
+    function abrirModalCopia(diaDestino) {
+        if (!modalCopiar || !listaDiasCopia) return;
+        listaDiasCopia.innerHTML = '';
+        modalCopiar.dataset.diaDestino = diaDestino;
+        mapaDosDias.forEach(nomeDiaFonte => {
+            if (nomeDiaFonte !== diaDestino && agenda[nomeDiaFonte] && agenda[nomeDiaFonte].length > 0 && agenda[nomeDiaFonte].some(atv => atv.descricao !== 'Dia de descanso')) {
+                const itemLista = document.createElement('li');
+                const botaoDia = document.createElement('button');
+                botaoDia.className = 'btn-copiar-dia';
+                botaoDia.dataset.diaFonte = nomeDiaFonte;
+                let nomeCapitalizado = nomeDiaFonte.charAt(0).toUpperCase() + nomeDiaFonte.slice(1);
+                botaoDia.textContent = (nomeDiaFonte !== 'sabado' && nomeDiaFonte !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado;
+                itemLista.appendChild(botaoDia);
+                listaDiasCopia.appendChild(itemLista);
+            }
+        });
+        modalCopiar.classList.add('visivel');
+    }
+
     function fecharModalCopia() { if(modalCopiar) modalCopiar.classList.remove('visivel'); }
-    function copiarAtividades(evento) { if (!evento.target.classList.contains('btn-copiar-dia')) return; const diaFonte = evento.target.dataset.diaFonte; const diaDestino = modalCopiar.dataset.diaDestino; const atividadesCopiadas = JSON.parse(JSON.stringify(agenda[diaFonte])); atividadesCopiadas.forEach((atividade, index) => { atividade.id = `${diaDestino}-${Date.now()}-${index}`; }); agenda[diaDestino] = atividadesCopiadas; fecharModalCopia(); renderizarAgenda(); }
-    function adicionarAtividadeSimples(nomeDia) { const novaAtividade = { id: `${nomeDia}-${Date.now()}`, descricao: 'Nova Atividade', inicio: '', fim: '' }; if (!agenda[nomeDia]) agenda[nomeDia] = []; if (agenda[nomeDia].length === 1 && agenda[nomeDia][0].descricao === 'Dia de descanso') { agenda[nomeDia] = []; } agenda[nomeDia].push(novaAtividade); renderizarAgenda(); }
-    function removerAtividade(evento) { const idParaRemover = evento.target.dataset.id; const nomeDia = evento.target.dataset.dia; agenda[nomeDia] = agenda[nomeDia].filter(atividade => atividade.id !== idParaRemover); renderizarAgenda(); }
-    async function salvarAlteracoes() { const todosDias = document.querySelectorAll('.dia'); todosDias.forEach(diaEl => { const nomeDia = diaEl.id; const novasAtividades = []; const atividadesEditaveis = diaEl.querySelectorAll('.atividade.editavel'); atividadesEditaveis.forEach(itemLista => { const descricaoInput = itemLista.querySelector('.input-descricao'); const horariosInputs = itemLista.querySelectorAll('.input-horario'); const descricao = descricaoInput ? descricaoInput.value : ''; const inicio = horariosInputs[0] ? horariosInputs[0].value : ''; const fim = horariosInputs[1] ? horariosInputs[1].value : ''; const idOriginal = itemLista.dataset.id; if (descricao) { novasAtividades.push({ id: idOriginal, descricao: descricao, inicio: inicio, fim: fim }); } }); agenda[nomeDia] = novasAtividades; }); try { await agendaDocRef.set(agenda); mostrarToast('Agenda salva com sucesso na nuvem!'); } catch (error) { console.error("Erro ao salvar agenda: ", error); mostrarToast('Erro ao salvar. Verifique sua conexão.', 'info'); } }
+
+    function copiarAtividades(evento) {
+        if (!evento.target.classList.contains('btn-copiar-dia')) return;
+        const diaFonte = evento.target.dataset.diaFonte;
+        const diaDestino = modalCopiar.dataset.diaDestino;
+        const atividadesCopiadas = JSON.parse(JSON.stringify(agenda[diaFonte]));
+        atividadesCopiadas.forEach((atividade, index) => { atividade.id = `${diaDestino}-${Date.now()}-${index}`; });
+        agenda[diaDestino] = atividadesCopiadas;
+        fecharModalCopia();
+        renderizarAgenda();
+    }
+
+    function adicionarAtividadeSimples(nomeDia) {
+        const novaAtividade = { id: `${nomeDia}-${Date.now()}`, descricao: 'Nova Atividade', inicio: '', fim: '' };
+        if (!agenda[nomeDia]) agenda[nomeDia] = [];
+        if (agenda[nomeDia].length === 1 && agenda[nomeDia][0].descricao === 'Dia de descanso') { agenda[nomeDia] = []; }
+        agenda[nomeDia].push(novaAtividade);
+        renderizarAgenda();
+    }
+
+    function removerAtividade(evento) {
+        const idParaRemover = evento.target.dataset.id;
+        const nomeDia = evento.target.dataset.dia;
+        agenda[nomeDia] = agenda[nomeDia].filter(atividade => atividade.id !== idParaRemover);
+        renderizarAgenda();
+    }
+
+    async function salvarAlteracoes() {
+        const todosDias = document.querySelectorAll('.dia');
+        todosDias.forEach(diaEl => {
+            const nomeDia = diaEl.id;
+            const novasAtividades = [];
+            const atividadesEditaveis = diaEl.querySelectorAll('.atividade.editavel');
+            atividadesEditaveis.forEach(itemLista => {
+                const descricaoInput = itemLista.querySelector('.input-descricao');
+                const horariosInputs = itemLista.querySelectorAll('.input-horario');
+                const descricao = descricaoInput ? descricaoInput.value : '';
+                const inicio = horariosInputs[0] ? horariosInputs[0].value : '';
+                const fim = horariosInputs[1] ? horariosInputs[1].value : '';
+                const idOriginal = itemLista.dataset.id;
+                if (descricao) {
+                    novasAtividades.push({ id: idOriginal, descricao, inicio, fim });
+                }
+            });
+            agenda[nomeDia] = novasAtividades;
+        });
+        try {
+            await agendaDocRef.set(agenda);
+            mostrarToast('Agenda salva com sucesso na nuvem!');
+        } catch (error) {
+            console.error("Erro ao salvar agenda: ", error);
+            mostrarToast('Erro ao salvar. Verifique sua conexão.', 'info');
+        }
+    }
     
+    function atualizarConcluidasListener() {
+        if (concluidasListener) { concluidasListener(); concluidasListener = null; }
+        concluidasDocRef = db.collection('concluidas').doc(getChaveDeHoje());
+        concluidasListener = concluidasDocRef.onSnapshot((concluidasDoc) => {
+            const ids = concluidasDoc.exists ? (concluidasDoc.data().ids || []) : [];
+            ultimaConcluidasIds = ids;
+            setTimeout(() => aplicarConcluidas(ids), 0);
+        }, (error) => {
+            console.error("Erro ao ouvir concluídas: ", error);
+        });
+    }
+
     if (btnEditar) {
         btnEditar.addEventListener('click', () => {
             modoEdicao = !modoEdicao;
             if(btnResetar) btnResetar.style.display = modoEdicao ? 'inline-block' : 'none';
             if (modoEdicao) {
-                btnEditar.textContent = 'Salvar'; btnEditar.classList.add('salvar'); if (destaqueInterval) clearInterval(destaqueInterval);
+                btnEditar.textContent = 'Salvar';
+                btnEditar.classList.add('salvar');
+                if (destaqueInterval) clearInterval(destaqueInterval);
             } else {
-                salvarAlteracoes(); btnEditar.textContent = 'Editar'; btnEditar.classList.remove('salvar'); destaqueInterval = setInterval(destacarAtividadeAtual, 60000);
+                salvarAlteracoes();
+                btnEditar.textContent = 'Editar';
+                btnEditar.classList.remove('salvar');
+                destaqueInterval = setInterval(destacarAtividadeAtual, 60000);
             }
             renderizarAgenda();
         });
@@ -157,7 +310,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if(btnResetar) {
         btnResetar.addEventListener('click', async () => {
             const confirmou = confirm('Tem certeza que deseja apagar TODAS as suas alterações e voltar para a rotina padrão?');
-            if (confirmou) { try { await agendaDocRef.set(agendaPadrao); await db.collection('concluidas').doc(getChaveDeHoje()).set({ids: []}); mostrarToast('Agenda restaurada para o padrão!'); } catch (error) { mostrarToast('Erro ao resetar a agenda.', 'info'); } }
+            if (confirmou) {
+                try {
+                    await agendaDocRef.set(agendaPadrao);
+                    agenda = agendaPadrao;
+                    await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: [] });
+                    ultimaConcluidasIds = [];
+                    renderizarAgenda();
+                    mostrarToast('Agenda restaurada para o padrão!');
+                } catch (error) {
+                    mostrarToast('Erro ao resetar a agenda.', 'info');
+                }
+            }
         });
     }
 
@@ -168,10 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function inicializar() {
         if (tituloPrincipalEl) {
             const hoje = new Date();
-            const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const nomeDosMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
-        
         const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
         document.documentElement.setAttribute('data-theme', savedTheme);
         const themeSwitcher = document.querySelector('.theme-switcher');
@@ -184,23 +347,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
             renderizarAgenda();
-            if (concluidasListener) { concluidasListener(); }
-            concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((concluidasDoc) => {
-                const ids = concluidasDoc.exists ? concluidasDoc.data().ids : [];
-                aplicarConcluidas(ids);
-            });
         }, (error) => {
             console.error("Erro ao ouvir a agenda principal: ", error);
             mostrarToast("Erro de conexão. Usando dados locais.", "info");
             agenda = agendaPadrao;
             renderizarAgenda();
-            aplicarConcluidas();
         });
-
+        atualizarConcluidasListener();
         if(!isVistaDiaria) {
             destaqueInterval = setInterval(destacarAtividadeAtual, 60000); 
         } else {
