@@ -215,8 +215,32 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 /* Media Queries (Responsividade) */
 @media (max-width: 767px) {
-    .main-header { padding: 0.75rem 1rem 0; }
-    #titulo-principal { font-size: 1.2rem; }
-    .agenda-container { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .dia { min-height: 320px; padding: 0.75rem; }
+    body {
+        overflow-y: auto; /* Permite scroll no celular */
+    }
+    .main-header { 
+        padding: 0.75rem 1rem 0; 
+    }
+    #titulo-principal { 
+        font-size: 1.2rem; 
+    }
+    
+    /* --- CORREÇÃO DO LAYOUT DOS CARDS --- */
+    .agenda-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 1rem;
+        margin: 1rem auto;
+        box-sizing: border-box; 
+    }
+    .dias-semana {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    /* --- FIM DA CORREÇÃO --- */
+
+    .dia { 
+        min-height: 320px; 
+        padding: 0.75rem; 
+    }
 }
