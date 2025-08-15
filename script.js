@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const listaDiasCopia = document.getElementById('lista-dias-copia');
     const btnCancelarCopia = document.getElementById('btn-cancelar-copia');
     const btnAddAvulso = document.getElementById('btn-add-avulso');
+    const syncThemeCheckbox = document.getElementById('sync-theme-checkbox');
+    const themeDocRef = db.collection('configuracoes').doc('tema'); // Novo documento para o tema
 
     let modoEdicao = false;
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
@@ -41,6 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let agenda = {};
     let destaqueInterval;
     let concluidasListener = null;
+
+    function applyTheme(themeName) {
+        document.documentElement.setAttribute('data-theme', themeName);
+    }
+
+    async function saveThemeToCloud(themeName) {
+        try {
+            await themeDocRef.set({ name: themeName });
+        } catch (error) {
+            console.error("Erro ao salvar tema na nuvem: ", error);
+            mostrarToast('Erro ao sincronizar tema.', 'info');
+        }
+    }
 
     function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
     
@@ -212,25 +227,67 @@ document.addEventListener('DOMContentLoaded', () => {
             const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
+
+        // --- LÓGICA DE TEMA ATUALIZADA ---
+        const themeSwitcher = document.querySelector('.theme-switcher');
         
-        if (window.localStorage) {
-            const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            const themeSwitcher = document.querySelector('.theme-switcher');
-            if (themeSwitcher) {
-                themeSwitcher.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('theme-btn')) {
-                        const themeName = e.target.dataset.themeSet;
-                        document.documentElement.setAttribute('data-theme', themeName);
-                        localStorage.setItem('agendaTheme', themeName);
-                    }
-                });
-            }
+        // 1. Carrega a preferência de sincronização
+        const isSyncEnabled = localStorage.getItem('themeSync') === 'true';
+        if (syncThemeCheckbox) syncThemeCheckbox.checked = isSyncEnabled;
+
+        // 2. Decide de onde carregar o tema inicial
+        if (isSyncEnabled) {
+            themeDocRef.get().then(doc => {
+                const cloudTheme = (doc.exists && doc.data().name) ? doc.data().name : 'sunset';
+                applyTheme(cloudTheme);
+                localStorage.setItem('agendaTheme', cloudTheme); // Salva localmente para carregamento rápido
+            }).catch(err => {
+                console.error("Erro ao buscar tema da nuvem, usando local.", err);
+                const localTheme = localStorage.getItem('agendaTheme') || 'sunset';
+                applyTheme(localTheme);
+            });
         } else {
-            console.warn('LocalStorage não está disponível.');
-            document.documentElement.setAttribute('data-theme', 'sunset');
+            const localTheme = localStorage.getItem('agendaTheme') || 'sunset';
+            applyTheme(localTheme);
         }
         
+        // 3. Adiciona listener para os botões de tema
+        if (themeSwitcher) {
+            themeSwitcher.addEventListener('click', (e) => {
+                if (e.target.classList.contains('theme-btn')) {
+                    const themeName = e.target.dataset.themeSet;
+                    applyTheme(themeName);
+                    localStorage.setItem('agendaTheme', themeName); // Sempre salva localmente
+                    
+                    if (syncThemeCheckbox && syncThemeCheckbox.checked) {
+                        saveThemeToCloud(themeName); // Salva na nuvem se a sincronização estiver ativa
+                    }
+                }
+            });
+        }
+
+        // 4. Adiciona listener para o interruptor de sincronização
+        if (syncThemeCheckbox) {
+            syncThemeCheckbox.addEventListener('change', (e) => {
+                const enabled = e.target.checked;
+                localStorage.setItem('themeSync', enabled);
+                if (enabled) {
+                    // Ao ativar, busca o tema da nuvem e aplica
+                    themeDocRef.get().then(doc => {
+                        if (doc.exists && doc.data().name) {
+                            const cloudTheme = doc.data().name;
+                            applyTheme(cloudTheme);
+                            localStorage.setItem('agendaTheme', cloudTheme);
+                            mostrarToast('Tema sincronizado com a nuvem!', 'sucesso');
+                        }
+                    });
+                } else {
+                    mostrarToast('Sincronização de tema desativada.', 'info');
+                }
+            });
+        }
+        // --- FIM DA LÓGICA DE TEMA ---
+
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
             renderizarAgenda();
