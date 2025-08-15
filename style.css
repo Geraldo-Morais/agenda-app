@@ -134,12 +134,14 @@ body {
 #segunda .titulo-dia-container, #sexta .titulo-dia-container { border-color: var(--cor-borda-2); }
 #terca .titulo-dia-container, #sabado .titulo-dia-container { border-color: var(--cor-borda-3); }
 #quarta .titulo-dia-container { border-color: var(--cor-borda-4); }
+.mensagem-dia-vazio { text-align: center; padding: 2rem 1rem; color: #aaa; font-style: italic; }
+
 
 /* Atividades */
 .atividade { background-color: rgba(241, 243, 245, 0.85); backdrop-filter: blur(2px); padding: 0.6rem 0.8rem; border-radius: calc(var(--borda-arredondada) - 4px); margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.9rem; border-left: 4px solid transparent; transition: all 0.3s ease; animation: fadeIn 0.4s ease; }
 .atividade.agora { background-color: var(--cor-destaque); color: white; border-left: 4px solid var(--cor-destaque); }
 .atividade.agora .horario { color: rgba(255, 255, 255, 0.85); }
-.atividade.concluida { opacity: 0.6; }
+.atividade.conclida { opacity: 0.6; }
 .atividade.concluida .descricao { text-decoration: line-through; text-decoration-thickness: 2px; }
 .atividade .descricao { font-weight: 500; }
 .atividade .horario { font-size: 0.85rem; color: #6c757d; }
@@ -170,10 +172,11 @@ body {
 /* Modals */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
 .modal-overlay.visivel { display: flex; }
-.modal-conteudo { background-color: var(--cor-dia-fundo); color: var(--cor-texto); padding: 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); /* MODAL COM MARGENS */ width: calc(100% - 40px); max-width: 420px; text-align: center; position: relative; display: flex; flex-direction: column; }
+.modal-conteudo { background-color: var(--cor-dia-fundo); color: var(--cor-texto); padding: 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); width: calc(100% - 40px); max-width: 420px; text-align: center; position: relative; display: flex; flex-direction: column; }
 .modal-conteudo h3 { margin-top: 0; margin-bottom: 1.5rem; }
-.botao-fechar-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--cor-texto-botao); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
-.botao-fechar-modal:hover { background-color: var(--cor-vermelho-rem); color: white; }
+/* ESTILO CORRIGIDO DO BOTÃO 'X' */
+.botao-fechar-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: 1px solid transparent; font-size: 1.5rem; cursor: pointer; color: var(--cor-texto-botao); border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.botao-fechar-modal:hover { background-color: var(--cor-vermelho-rem); color: white; border-color: var(--cor-vermelho-rem); }
 
 /* Estilos específicos do Modal de Edição */
 #modal-editar-dia .modal-conteudo { max-height: 80vh; }
@@ -185,33 +188,11 @@ body {
 .atividade-editavel-modal .input-horario { width: 90px; }
 .btn-remover-modal { background-color: transparent; border: 1px solid var(--cor-borda-botao); color: var(--cor-texto-botao); font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all 0.2s ease; width: 36px; height: 36px; font-size: 1.2rem; }
 .btn-remover-modal:hover { background-color: var(--cor-vermelho-rem); border-color: var(--cor-vermelho-rem); color: white; }
-
 .rodape-modal-edicao { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
 .botoes-acao-modal { display: flex; gap: 0.5rem; }
-
-/* BOTÕES DO MODAL PADRONIZADOS E MENORES */
-.botao-modal {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border-radius: var(--borda-arredondada);
-    border: 1px solid var(--cor-borda-botao);
-    background-color: transparent;
-    color: var(--cor-texto-botao);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.botao-modal.add {
-    background-color: var(--cor-verde-add);
-    border-color: var(--cor-verde-add);
-    color: white;
-    margin-right: auto; /* Empurra os outros botões para a direita */
-}
-.botao-modal.salvar {
-    background-color: var(--cor-destaque);
-    border-color: var(--cor-destaque);
-    color: white;
-}
+.botao-modal { padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 500; border-radius: var(--borda-arredondada); border: 1px solid var(--cor-borda-botao); background-color: transparent; color: var(--cor-texto-botao); cursor: pointer; transition: all 0.2s ease; }
+.botao-modal.add { background-color: var(--cor-verde-add); border-color: var(--cor-verde-add); color: white; margin-right: auto; }
+.botao-modal.salvar { background-color: var(--cor-destaque); border-color: var(--cor-destaque); color: white; }
 
 /* Sincronização e Temas */
 .sync-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
