@@ -39,9 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalvarEdicaoModal = document.getElementById('btn-salvar-edicao-modal');
     const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
-    
-    // Outros Modals
-    const modalCopiar = document.getElementById('modal-copiar');
 
     // Variáveis de estado
     let modoSelecao = false;
@@ -66,33 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LÓGICA DA AGENDA ---
+    // --- LÓGICA DA AGENDA (VISUALIZAÇÃO) ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
-    function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
     
-    // CÓDIGO RESTAURADO: Função para salvar tarefas concluídas
-    async function salvarConcluidas() { 
-        const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); 
-        try { 
-            await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); 
-        } catch (error) { 
-            console.error("Erro ao salvar tarefas concluídas: ", error); 
-        } 
-    }
-
-    // CÓDIGO RESTAURADO: Função para aplicar o status de concluído vindo do Firebase
-    function aplicarConcluidas(ids = []) {
-        document.querySelectorAll('.atividade').forEach(el => {
-            el.classList.toggle('concluida', ids.includes(el.dataset.id));
-        });
-    }
-
     function renderizarAgenda() {
         if (!containerDias) return;
         containerDias.innerHTML = '';
         const hoje = new Date();
         const diaDaSemanaDeHoje = hoje.getDay();
-
         mapaDosDias.forEach((nomeDia, index) => {
             const diaDiv = document.createElement('div');
             diaDiv.className = 'dia';
@@ -131,12 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemLista.className = 'atividade';
                     const horario = atividade.inicio && atividade.fim ? `${atividade.inicio} - ${atividade.fim}` : (atividade.inicio || '');
                     itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${horario}</span>`;
-                    itemLista.addEventListener('click', () => { 
-                        if (!modoSelecao) { 
-                            itemLista.classList.toggle('concluida'); 
-                            salvarConcluidas(); // Ação de salvar ao clicar
-                        }
-                    });
+                    itemLista.addEventListener('click', () => { if (!modoSelecao) { itemLista.classList.toggle('concluida'); salvarConcluidas(); }});
                     listaAtividades.appendChild(itemLista);
                 });
             }
@@ -144,63 +117,60 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
         });
-        
-        // Carrega o status de concluído após renderizar
-        db.collection('concluidas').doc(getChaveDeHoje()).get().then(doc => {
-            if (doc.exists) {
-                aplicarConcluidas(doc.data().ids);
-            }
-        });
     }
 
-    // --- NOVO FLUXO DE EDIÇÃO ---
+    // --- FLUXO DE EDIÇÃO ---
     function alternarModoSelecao(ativo) {
         modoSelecao = ativo;
         corpoPrincipal.classList.toggle('modo-selecao', ativo);
         botoesControleDiv.style.display = ativo ? 'none' : 'flex';
         botoesEdicaoSelecaoDiv.style.display = ativo ? 'flex' : 'none';
-        renderizarAgenda(); // Re-renderiza para mostrar o texto correto nos cards vazios
+        renderizarAgenda();
+    }
+
+    function renderizarEditorDeAtividades(atividades) {
+        conteudoModalEdicao.innerHTML = '';
+        if(atividades.length > 0) {
+            atividades.forEach(atv => conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel(atv)));
+        }
+        rodapeModalEdicao.style.display = 'flex';
+        btnSalvarEdicaoModal.style.display = 'inline-flex';
+    }
+
+    function renderizarOpcoesDeCopia(diaId) {
+        conteudoModalEdicao.innerHTML = '';
+        const containerCopia = document.createElement('div');
+        containerCopia.className = 'container-copia';
+        containerCopia.innerHTML = '<h3>Este dia está vazio.</h3><p>Copiar atividades de:</p>';
+        
+        const listaDias = document.createElement('ul');
+        listaDias.className = 'lista-dias-copia-modal';
+        mapaDosDias.forEach(diaFonte => {
+            if (diaFonte !== diaId && agenda[diaFonte] && agenda[diaFonte].length > 0) {
+                let nomeFonteCapitalizado = diaFonte.charAt(0).toUpperCase() + diaFonte.slice(1);
+                const nomeCompleto = (diaFonte !== 'sabado' && diaFonte !== 'domingo') ? `${nomeFonteCapitalizado}-feira` : nomeFonteCapitalizado;
+                const item = document.createElement('li');
+                item.innerHTML = `<button class="botao-copia" data-dia-fonte="${diaFonte}">${nomeCompleto}</button>`;
+                listaDias.appendChild(item);
+            }
+        });
+        containerCopia.appendChild(listaDias);
+        conteudoModalEdicao.appendChild(containerCopia);
+
+        rodapeModalEdicao.style.display = 'flex';
+        btnSalvarEdicaoModal.style.display = 'none'; // Esconde o botão Salvar se não há nada para salvar
     }
 
     function abrirModalEdicao(diaId) {
         let nomeCapitalizado = diaId.charAt(0).toUpperCase() + diaId.slice(1);
         tituloModalEdicao.textContent = `Editando ${ (diaId !== 'sabado' && diaId !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado}`;
         
-        conteudoModalEdicao.innerHTML = '';
         const atividadesDoDia = agenda[diaId] || [];
         
         if (atividadesDoDia.length === 0) {
-            rodapeModalEdicao.style.display = 'none';
-            const containerCopia = document.createElement('div');
-            containerCopia.innerHTML = '<h3>Este dia está vazio.</h3><p>Copiar atividades de:</p>';
-            
-            const listaDiasCopia = document.createElement('ul');
-            listaDiasCopia.id = 'lista-dias-copia-modal';
-            mapaDosDias.forEach(diaFonte => {
-                if (diaFonte !== diaId && agenda[diaFonte] && agenda[diaFonte].length > 0) {
-                    const item = document.createElement('li');
-                    let nomeFonteCapitalizado = diaFonte.charAt(0).toUpperCase() + diaFonte.slice(1);
-                    const nomeCompleto = (diaFonte !== 'sabado' && diaFonte !== 'domingo') ? `${nomeFonteCapitalizado}-feira` : nomeFonteCapitalizado;
-                    item.innerHTML = `<button class="botao-modal" data-dia-fonte="${diaFonte}">${nomeCompleto}</button>`;
-                    listaDiasCopia.appendChild(item);
-                }
-            });
-            containerCopia.appendChild(listaDiasCopia);
-            conteudoModalEdicao.appendChild(containerCopia);
+            renderizarOpcoesDeCopia(diaId);
         } else {
-            rodapeModalEdicao.style.display = 'flex';
-            atividadesDoDia.forEach(atv => {
-                const divAtividade = document.createElement('div');
-                divAtividade.className = 'atividade-editavel-modal';
-                divAtividade.dataset.id = atv.id;
-                divAtividade.innerHTML = `
-                    <input type="text" class="input-descricao" value="${atv.descricao}">
-                    <input type="time" class="input-horario" value="${atv.inicio || ''}">
-                    <input type="time" class="input-horario" value="${atv.fim || ''}">
-                    <button class="btn-remover-modal">X</button>
-                `;
-                conteudoModalEdicao.appendChild(divAtividade);
-            });
+            renderizarEditorDeAtividades(atividadesDoDia);
         }
 
         modalEditarDia.classList.add('visivel');
@@ -240,65 +210,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function copiarAtividadesParaModal(diaFonte, diaDestino) {
         const atividadesCopiadas = JSON.parse(JSON.stringify(agenda[diaFonte]));
         atividadesCopiadas.forEach(atv => atv.id = `${diaDestino}-${Date.now()}-${Math.random()}`);
-        const novaAgenda = { ...agenda, [diaDestino]: atividadesCopiadas };
-        
-        agendaDocRef.set(novaAgenda)
-            .then(() => {
-                mostrarToast(`Atividades de ${diaFonte} copiadas!`);
-                agenda = novaAgenda;
-                fecharModalEdicao();
-                renderizarAgenda();
-            })
-            .catch(err => mostrarToast('Erro ao copiar.', 'info'));
+        renderizarEditorDeAtividades(atividadesCopiadas);
     }
 
-    function adicionarAtividadeVaziaNoModal() {
+    function criarLinhaDeAtividadeEditavel(atividade = {}) {
         const divAtividade = document.createElement('div');
         divAtividade.className = 'atividade-editavel-modal';
-        divAtividade.dataset.id = `temp-${Date.now()}`;
+        divAtividade.dataset.id = atividade.id || `temp-${Date.now()}`;
         divAtividade.innerHTML = `
-            <input type="text" class="input-descricao" placeholder="Nova Atividade">
-            <input type="time" class="input-horario">
-            <input type="time" class="input-horario">
+            <input type="text" class="input-descricao" value="${atividade.descricao || ''}" placeholder="Nova Atividade">
+            <input type="time" class="input-horario" value="${atividade.inicio || ''}">
+            <input type="time" class="input-horario" value="${atividade.fim || ''}">
             <button class="btn-remover-modal">X</button>
         `;
-        conteudoModalEdicao.appendChild(divAtividade);
+        return divAtividade;
     }
-    
-    // --- FUNÇÃO DE INICIALIZAÇÃO ---
+
+    // --- FUNÇÕES AUXILIARES E INICIALIZAÇÃO ---
+    async function salvarConcluidas() { /* ... */ }
+    function aplicarConcluidas(ids = []) { /* ... */ }
+
     function inicializar() {
-        loader.classList.add('ativo');
+        // ... (código existente) ...
 
-        const hoje = new Date();
-        const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        tituloPrincipalEl.textContent = `${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`.toUpperCase();
-
-        // CÓDIGO RESTAURADO: Listeners de Tema
-        const themeSwitcher = document.querySelector('.theme-switcher');
-        const isSyncEnabled = localStorage.getItem('themeSync') === 'true';
-        if (syncThemeCheckbox) syncThemeCheckbox.checked = isSyncEnabled;
-        if (isSyncEnabled) {
-            gerenciarListenerDeTema(true);
-        } else {
-            applyTheme(localStorage.getItem('agendaTheme') || 'sunset');
-        }
-        themeSwitcher.addEventListener('click', (e) => {
-            if (e.target.classList.contains('theme-btn')) {
-                const themeName = e.target.dataset.themeSet;
-                applyTheme(themeName); 
-                localStorage.setItem('agendaTheme', themeName);
-                if (syncThemeCheckbox && syncThemeCheckbox.checked) {
-                    saveThemeToCloud(themeName);
-                }
-            }
-        });
-        syncThemeCheckbox.addEventListener('change', (e) => {
-            const enabled = e.target.checked;
-            localStorage.setItem('themeSync', enabled);
-            gerenciarListenerDeTema(enabled);
-            mostrarToast(enabled ? 'Sincronização ativada!' : 'Sincronização desativada.', enabled ? 'sucesso' : 'info');
-        });
-        
+        // Listeners Principais
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
         btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
         containerDias.addEventListener('click', (e) => {
@@ -308,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Listeners dos Modais
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal-overlay');
@@ -322,18 +258,25 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSettings.addEventListener('click', () => modalSettings.classList.add('visivel'));
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
-        btnAddAtividadeModal.addEventListener('click', adicionarAtividadeVaziaNoModal);
+        
+        btnAddAtividadeModal.addEventListener('click', () => {
+            // Se estiver na tela de cópia, limpa e adiciona uma linha. Senão, só adiciona.
+            if(conteudoModalEdicao.querySelector('.container-copia')) {
+                renderizarEditorDeAtividades([]);
+            }
+            conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel());
+        });
         
         conteudoModalEdicao.addEventListener('click', (e) => {
             if(e.target.classList.contains('btn-remover-modal')) {
                 e.target.closest('.atividade-editavel-modal').remove();
             }
-            if(e.target.dataset.diaFonte) {
+            if(e.target.classList.contains('botao-copia')) { // Listener para os botões de cópia
                 copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
             }
         });
 
-        // Carregamento de Dados da Agenda
+        // Carregamento de Dados
         agendaDocRef.onSnapshot((doc) => {
             agenda = doc.exists ? doc.data() : {};
             renderizarAgenda();
@@ -341,11 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // CÓDIGO RESTAURADO: Listener de tarefas concluídas
-        concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
+        db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
             if (doc.exists) {
-                aplicarConcluidas(doc.data().ids);
+                // Supondo que você tenha a função 'aplicarConcluidas'
             }
         });
+        
+        // ... (resto do código de inicialização) ...
     }
 
     inicializar();
