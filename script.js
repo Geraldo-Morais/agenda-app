@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddAvulso = document.getElementById('btn-add-avulso');
     const syncThemeCheckbox = document.getElementById('sync-theme-checkbox');
     const themeDocRef = db.collection('configuracoes').doc('tema');
+    const btnSettings = document.getElementById('btn-settings'); // Botão da engrenagem
+    const settingsDropdown = document.getElementById('settings-dropdown'); // O menu suspenso
 
     let modoEdicao = false;
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
@@ -43,9 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let agenda = {};
     let destaqueInterval;
     let concluidasListener = null;
-    let themeListener = null; // Variável para controlar o ouvinte do tema
+    let themeListener = null; 
 
-    // --- FUNÇÕES DE CONTROLE DE TEMA ---
     function applyTheme(themeName) {
         document.documentElement.setAttribute('data-theme', themeName);
     }
@@ -60,19 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function gerenciarListenerDeTema(syncAtivo) {
-        // Se já existe um ouvinte ativo, desliga ele primeiro para evitar duplicação
         if (themeListener) {
-            themeListener(); // Isso executa a função de "unsubscribe" do snapshot
+            themeListener(); 
             themeListener = null;
         }
-
-        // Se a sincronização deve estar ATIVA, cria um novo ouvinte
         if (syncAtivo) {
             themeListener = themeDocRef.onSnapshot((doc) => {
                 const cloudTheme = (doc.exists && doc.data().name) ? doc.data().name : 'sunset';
-                console.log('Tema recebido da nuvem em tempo real:', cloudTheme); // Log para teste
                 applyTheme(cloudTheme);
-                localStorage.setItem('agendaTheme', cloudTheme); // Atualiza o local storage também
+                localStorage.setItem('agendaTheme', cloudTheme);
             }, (error) => {
                 console.error("Erro no listener do tema: ", error);
                 mostrarToast("Erro ao sincronizar tema.", "info");
@@ -80,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNÇÕES PRINCIPAIS DA AGENDA ---
     function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
     
     async function salvarConcluidas() { const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); try { await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); } catch (error) { console.error("Erro ao salvar tarefas concluídas: ", error); } }
@@ -245,6 +241,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if(listaDiasCopia) listaDiasCopia.addEventListener('click', copiarAtividades);
     if(btnAddAvulso) { btnAddAvulso.addEventListener('click', () => { const diaDestino = modalCopiar.dataset.diaDestino; if (diaDestino) { adicionarAtividadeSimples(diaDestino); fecharModalCopia(); } }); }
     
+    if (btnSettings) {
+        btnSettings.addEventListener('click', (event) => {
+            event.stopPropagation();
+            settingsDropdown.classList.toggle('visivel');
+        });
+        window.addEventListener('click', (event) => {
+            if (!settingsDropdown.contains(event.target) && !btnSettings.contains(event.target)) {
+                settingsDropdown.classList.remove('visivel');
+            }
+        });
+    }
+
     function inicializar() {
         if (tituloPrincipalEl) {
             const hoje = new Date();
@@ -252,44 +260,37 @@ document.addEventListener('DOMContentLoaded', () => {
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
 
-        // --- LÓGICA DE TEMA NOVA E EM TEMPO REAL ---
         const themeSwitcher = document.querySelector('.theme-switcher');
         
-        // 1. Carrega a preferência de sincronização
         const isSyncEnabled = localStorage.getItem('themeSync') === 'true';
         if (syncThemeCheckbox) syncThemeCheckbox.checked = isSyncEnabled;
 
-        // 2. Decide a ação inicial
         if (isSyncEnabled) {
-            gerenciarListenerDeTema(true); // Ativa o ouvinte em tempo real
+            gerenciarListenerDeTema(true);
         } else {
             const localTheme = localStorage.getItem('agendaTheme') || 'sunset';
-            applyTheme(localTheme); // Se não sincroniza, apenas carrega o tema local
+            applyTheme(localTheme);
         }
         
-        // 3. Adiciona listener para os botões de tema
         if (themeSwitcher) {
             themeSwitcher.addEventListener('click', (e) => {
                 if (e.target.classList.contains('theme-btn')) {
                     const themeName = e.target.dataset.themeSet;
-                    // A mudança visual agora será tratada pelo onSnapshot se a sync estiver ativa.
-                    // Mas aplicamos localmente para uma resposta visual instantânea.
                     applyTheme(themeName); 
-                    localStorage.setItem('agendaTheme', themeName); // Salva localmente para offline
+                    localStorage.setItem('agendaTheme', themeName);
                     
                     if (syncThemeCheckbox && syncThemeCheckbox.checked) {
-                        saveThemeToCloud(themeName); // Salva na nuvem, o que vai disparar o onSnapshot em todos os clientes
+                        saveThemeToCloud(themeName);
                     }
                 }
             });
         }
 
-        // 4. Adiciona listener para o interruptor de sincronização
         if (syncThemeCheckbox) {
             syncThemeCheckbox.addEventListener('change', (e) => {
                 const enabled = e.target.checked;
                 localStorage.setItem('themeSync', enabled);
-                gerenciarListenerDeTema(enabled); // Usa a função central para ligar ou desligar o ouvinte
+                gerenciarListenerDeTema(enabled);
                 
                 if(!enabled) {
                    mostrarToast('Sincronização de tema desativada.', 'info');
@@ -298,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        // --- FIM DA LÓGICA DE TEMA ---
 
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
