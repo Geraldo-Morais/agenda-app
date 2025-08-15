@@ -14,9 +14,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="script.js" defer></script>
 </head>
-<body>
+<body class="corpo-principal">
 
-    <div id="loader" class="loader-overlay">
+    <div id="loader" class="loader-overlay ativo">
         <div class="loader-spinner"></div>
     </div>
 
@@ -28,9 +28,8 @@
             <button id="btn-editar" class="botao">Editar Atividades</button>
             <button id="btn-settings" class="botao">🎨</button>
         </div>
-        <div id="botoes-edicao" class="botoes-controle" style="display: none;">
-             <button id="btn-cancelar" class="botao">Cancelar</button>
-             <button id="btn-salvar" class="botao salvar">Salvar</button>
+        <div id="botoes-edicao-selecao" class="botoes-controle" style="display: none;">
+             <button id="btn-cancelar-selecao" class="botao">Cancelar</button>
         </div>
     </header>
 
@@ -42,16 +41,16 @@
 
     <div id="modal-copiar" class="modal-overlay">
         <div class="modal-conteudo">
+            <button class="botao-fechar-modal">X</button>
             <h3>Copiar atividades de:</h3>
             <ul id="lista-dias-copia"></ul>
             <button id="btn-add-avulso" class="botao">Adicionar Tarefa em Branco</button>
-            <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
         </div>
     </div>
 
     <div id="modal-settings" class="modal-overlay">
         <div class="modal-conteudo">
-            <button id="btn-fechar-settings" class="botao-fechar-modal">X</button>
+            <button class="botao-fechar-modal">X</button>
             <h3>Configurações de Tema</h3>
             <div class="sync-container">
                 <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
@@ -65,6 +64,22 @@
                 <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
                 <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
                 <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-editar-dia" class="modal-overlay">
+        <div class="modal-conteudo">
+            <button class="botao-fechar-modal">X</button>
+            <h3 id="titulo-modal-edicao"></h3>
+            <div id="conteudo-modal-edicao" class="conteudo-modal-edicao">
+                </div>
+            <div class="rodape-modal-edicao">
+                <button id="btn-add-atividade-modal" class="botao-add-modal">+</button>
+                <div class="botoes-acao-modal">
+                    <button id="btn-cancelar-edicao-modal" class="botao">Cancelar</button>
+                    <button id="btn-salvar-edicao-modal" class="botao salvar">Salvar Alterações</button>
+                </div>
             </div>
         </div>
     </div>
