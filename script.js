@@ -65,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DA AGENDA (VISUALIZAÇÃO) ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
+    function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
+    async function salvarConcluidas() { const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); try { await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); } catch (error) { console.error("Erro ao salvar tarefas concluídas: ", error); } }
+    function aplicarConcluidas(ids = []) { document.querySelectorAll('.atividade').forEach(el => { el.classList.toggle('concluida', ids.includes(el.dataset.id)); }); }
     
     function renderizarAgenda() {
         if (!containerDias) return;
@@ -158,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         conteudoModalEdicao.appendChild(containerCopia);
 
         rodapeModalEdicao.style.display = 'flex';
-        btnSalvarEdicaoModal.style.display = 'none'; // Esconde o botão Salvar se não há nada para salvar
+        btnSalvarEdicaoModal.style.display = 'none';
     }
 
     function abrirModalEdicao(diaId) {
@@ -226,14 +229,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return divAtividade;
     }
 
-    // --- FUNÇÕES AUXILIARES E INICIALIZAÇÃO ---
-    async function salvarConcluidas() { /* ... */ }
-    function aplicarConcluidas(ids = []) { /* ... */ }
-
+    // --- FUNÇÃO DE INICIALIZAÇÃO ---
     function inicializar() {
-        // ... (código existente) ...
+        loader.classList.add('ativo');
 
-        // Listeners Principais
+        const hoje = new Date();
+        const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        tituloPrincipalEl.textContent = `${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`.toUpperCase();
+
+        const themeSwitcher = document.querySelector('.theme-switcher');
+        const isSyncEnabled = localStorage.getItem('themeSync') === 'true';
+        syncThemeCheckbox.checked = isSyncEnabled;
+        if (isSyncEnabled) {
+            gerenciarListenerDeTema(true);
+        } else {
+            applyTheme(localStorage.getItem('agendaTheme') || 'sunset');
+        }
+        
+        themeSwitcher.addEventListener('click', (e) => {
+            if (e.target.classList.contains('theme-btn')) {
+                const themeName = e.target.dataset.themeSet;
+                applyTheme(themeName); 
+                localStorage.setItem('agendaTheme', themeName);
+                if (syncThemeCheckbox.checked) {
+                    saveThemeToCloud(themeName);
+                }
+            }
+        });
+        syncThemeCheckbox.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            localStorage.setItem('themeSync', enabled);
+            gerenciarListenerDeTema(enabled);
+            mostrarToast(enabled ? 'Sincronização ativada!' : 'Sincronização desativada.', enabled ? 'sucesso' : 'info');
+        });
+        
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
         btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
         containerDias.addEventListener('click', (e) => {
@@ -243,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Listeners dos Modais
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal-overlay');
@@ -260,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
         
         btnAddAtividadeModal.addEventListener('click', () => {
-            // Se estiver na tela de cópia, limpa e adiciona uma linha. Senão, só adiciona.
             if(conteudoModalEdicao.querySelector('.container-copia')) {
                 renderizarEditorDeAtividades([]);
             }
@@ -271,26 +298,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if(e.target.classList.contains('btn-remover-modal')) {
                 e.target.closest('.atividade-editavel-modal').remove();
             }
-            if(e.target.classList.contains('botao-copia')) { // Listener para os botões de cópia
+            if(e.target.classList.contains('botao-copia')) {
                 copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
             }
         });
 
-        // Carregamento de Dados
         agendaDocRef.onSnapshot((doc) => {
             agenda = doc.exists ? doc.data() : {};
             renderizarAgenda();
             loader.classList.remove('ativo');
         });
         
-        // CÓDIGO RESTAURADO: Listener de tarefas concluídas
-        db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
+        concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
             if (doc.exists) {
-                // Supondo que você tenha a função 'aplicarConcluidas'
+                aplicarConcluidas(doc.data().ids);
+            } else {
+                aplicarConcluidas([]); // Garante que limpe se o doc for deletado
             }
         });
-        
-        // ... (resto do código de inicialização) ...
     }
 
     inicializar();
