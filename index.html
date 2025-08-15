@@ -9,13 +9,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="script.js" defer></script>
+
 </head>
 <body>
 
     <header class="main-header">
-        <div class="titulo-container">
-            <h1 id="titulo-principal"></h1>
-            <span id="app-version"></span> </div>
+        <h1 id="titulo-principal"></h1>
         <div class="botoes-controle">
             <div class="theme-switcher">
                 <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
@@ -23,7 +26,6 @@
                 <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
                 <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
             </div>
-            <button id="btn-exportar" class="botao-secundario">Exportar Widget</button>
             <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
             <button id="btn-editar" class="botao">Editar</button>
             <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
@@ -44,8 +46,7 @@
             <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
         </div>
     </div>
-
-    <script src="script.js"></script>
+    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
