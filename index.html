@@ -20,15 +20,19 @@
         <div class="loader-spinner"></div>
     </div>
 
-    <header class="main-header" style="display: none;">
+    <div class="titulo-principal-container">
         <h1 id="titulo-principal"></h1>
+    </div>
+
+    <header class="main-header">
         <div class="botoes-controle">
             <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
-            <a href="hoje.html" class="botao">Ver Apenas Hoje</a>
+            
+            <button id="btn-cancelar" class="botao" style="display: none;">Cancelar</button>
             <button id="btn-editar" class="botao">Editar</button>
 
             <div class="settings-menu-container">
-                <button id="btn-settings" class="botao-icone">⚙️</button>
+                <button id="btn-settings" class="botao-icone">🎨</button>
                 <div id="settings-dropdown" class="settings-dropdown">
                     <div class="sync-container">
                         <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
@@ -45,10 +49,10 @@
                     </div>
                 </div>
             </div>
-             </div>
+        </div>
     </header>
 
-    <main class="agenda-container" style="display: none;">
+    <main class="agenda-container">
         <div class="dias-semana" id="container-dias"></div>
     </main>
     
