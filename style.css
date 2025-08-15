@@ -240,3 +240,83 @@ body.vista-diaria { display: flex; justify-content: center; align-items: center;
         font-size: 1.1rem;
     }
 }
+@media (max-width: 767px) {
+
+    /* FORÇA A PÁGINA A TER ROLAGEM NO CELULAR, SE PRECISO */
+    body {
+        overflow-y: auto; /* Permite rolar para baixo na index */
+        overflow-x: hidden; /* Evita rolagem lateral */
+    }
+
+    /* REORGANIZA O CABEÇALHO EM TELAS PEQUENAS */
+    .main-header {
+        flex-direction: column; /* Coloca o título acima dos botões */
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 0 1rem;
+    }
+    .botoes-controle {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .botao {
+        padding: 0.4rem 0.8rem;
+        min-width: initial; /* Remove a largura mínima */
+        font-size: 0.85rem;
+    }
+    .botao-secundario {
+         display: none !important; /* Esconde botões menos usados no celular */
+    }
+
+    /* MUDA O GRID DA AGENDA PARA 2 COLUNAS */
+    .dias-semana {
+        grid-template-columns: repeat(2, 1fr); /* A mágica das 2 colunas */
+        gap: 1rem;
+    }
+
+    /* FAZ OS CARDS FICAREM QUADRADOS E AJUSTA O CONTEÚDO */
+    .dia {
+        aspect-ratio: 1 / 1; /* A mágica para o card quadrado */
+        padding: 0.75rem;    /* Menos preenchimento interno */
+        justify-content: flex-start;
+    }
+    
+    .conteudo-dia {
+        overflow-y: auto; /* Permite rolar DENTRO do card se a lista for longa */
+    }
+    /* Esconde a barra de rolagem visualmente mas mantém a funcionalidade */
+    .conteudo-dia::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    .dia h2 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+    }
+
+    .dia-numero {
+        font-size: 2.5rem; /* Número do fundo bem menor */
+        bottom: 0.1rem;
+        right: 0.5rem;
+    }
+
+    /* AJUSTA O TAMANHO DAS FONTES DAS ATIVIDADES */
+    .atividade {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .atividade .horario {
+        font-size: 0.7rem;
+    }
+    
+    .btn-adicionar, .btn-remover {
+        width: 24px;
+        height: 24px;
+        font-size: 1.1rem;
+    }
+}
