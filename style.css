@@ -45,21 +45,6 @@ body {
 
 /* Cabeçalho e Botões */
 .main-header { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; width: 100%; margin: 1.5rem auto 0; padding: 0 1.5rem; }
-.titulo-container {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-#app-version {
-    font-size: 0.7rem;
-    font-weight: 400;
-    color: var(--cor-texto-botao);
-    opacity: 0.7;
-    white-space: nowrap;
-}
-
 .main-header h1 { font-weight: 500; font-size: 1.25rem; color: var(--cor-texto); transition: color 0.3s ease; }
 .botoes-controle { display: flex; align-items: center; gap: 1rem; }
 .botao { background-color: transparent; padding: 0.5rem 1rem; border: 1px solid var(--cor-borda-botao); border-radius: var(--borda-arredondada); color: var(--cor-texto-botao); text-decoration: none; font-weight: 500; transition: all 0.2s ease; min-width: 175px; text-align: center; cursor: pointer; font-family: 'Roboto', sans-serif; font-size: 1rem; line-height: 1.5; }
