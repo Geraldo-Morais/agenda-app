@@ -12,11 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const agendaDocRef = db.collection('agendas').doc('minhaAgenda');
 
     const loader = document.getElementById('loader');
-    const mainHeader = document.querySelector('.main-header');
     const agendaContainer = document.querySelector('.agenda-container');
     const containerDias = document.getElementById('container-dias');
     const tituloPrincipalEl = document.getElementById('titulo-principal');
     const btnEditar = document.getElementById('btn-editar');
+    const btnCancelar = document.getElementById('btn-cancelar'); // Novo botão
     const btnResetar = document.getElementById('btn-resetar');
     const toastEl = document.getElementById('toast');
     const modalCopiar = document.getElementById('modal-copiar');
@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddAvulso = document.getElementById('btn-add-avulso');
     const syncThemeCheckbox = document.getElementById('sync-theme-checkbox');
     const themeDocRef = db.collection('configuracoes').doc('tema');
-    const btnSettings = document.getElementById('btn-settings'); // Botão da engrenagem
-    const settingsDropdown = document.getElementById('settings-dropdown'); // O menu suspenso
+    const btnSettings = document.getElementById('btn-settings');
+    const settingsDropdown = document.getElementById('settings-dropdown');
 
     let modoEdicao = false;
     const isVistaDiaria = document.body.classList.contains('vista-diaria');
@@ -209,10 +209,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // LÓGICA DO BOTÃO EDITAR/SALVAR/CANCELAR
     if (btnEditar) {
         btnEditar.addEventListener('click', () => {
             modoEdicao = !modoEdicao;
             if(btnResetar) btnResetar.style.display = modoEdicao ? 'inline-block' : 'none';
+            if(btnCancelar) btnCancelar.style.display = modoEdicao ? 'inline-block' : 'none';
+            
             if (modoEdicao) {
                 btnEditar.textContent = 'Salvar';
                 btnEditar.classList.add('salvar'); 
@@ -227,6 +230,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } 
             renderizarAgenda();
+        });
+    }
+
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', () => {
+            modoEdicao = false;
+            btnEditar.textContent = 'Editar';
+            btnEditar.classList.remove('salvar');
+            btnResetar.style.display = 'none';
+            btnCancelar.style.display = 'none';
+            renderizarAgenda(); // Re-renderiza a agenda com os dados originais, descartando alterações
+            if (!isVistaDiaria) {
+                destaqueInterval = setInterval(destacarAtividadeAtual, 60000);
+            }
         });
     }
 
@@ -247,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsDropdown.classList.toggle('visivel');
         });
         window.addEventListener('click', (event) => {
-            if (!settingsDropdown.contains(event.target) && !btnSettings.contains(event.target)) {
+            if (settingsDropdown && !settingsDropdown.contains(event.target) && !btnSettings.contains(event.target)) {
                 settingsDropdown.classList.remove('visivel');
             }
         });
@@ -257,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tituloPrincipalEl) {
             const hoje = new Date();
             const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+            tituloPrincipalEl.textContent = `${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`.toUpperCase();
         }
 
         const themeSwitcher = document.querySelector('.theme-switcher');
@@ -267,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isSyncEnabled) {
             gerenciarListenerDeTema(true);
+
         } else {
             const localTheme = localStorage.getItem('agendaTheme') || 'sunset';
             applyTheme(localTheme);
@@ -303,18 +321,25 @@ document.addEventListener('DOMContentLoaded', () => {
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
             renderizarAgenda();
+            destacarAtividadeAtual(); // Garante o destaque após carregar os dados
             
-            if(loader) loader.classList.remove('ativo');
-            if(mainHeader) mainHeader.style.display = 'flex';
-            if(agendaContainer) agendaContainer.style.display = 'flex';
+            if(loader) {
+                loader.classList.remove('ativo');
+                const mainHeader = document.querySelector('.main-header');
+                if(mainHeader) mainHeader.style.display = 'flex';
+                if(agendaContainer) agendaContainer.style.display = 'flex';
+            }
         }, (error) => {
             console.error("Erro ao ouvir a agenda principal: ", error);
             mostrarToast("Erro de conexão.", "info");
             agenda = agendaPadrao;
             renderizarAgenda();
-            if(loader) loader.style.display = 'none';
-            if(mainHeader) mainHeader.style.display = 'flex';
-            if(agendaContainer) agendaContainer.style.display = 'flex';
+            if(loader) {
+                loader.style.display = 'none';
+                const mainHeader = document.querySelector('.main-header');
+                if(mainHeader) mainHeader.style.display = 'flex';
+                if(agendaContainer) agendaContainer.style.display = 'flex';
+            }
         });
 
         const concluidasDocRef = db.collection('concluidas').doc(getChaveDeHoje());
@@ -326,8 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(!isVistaDiaria) {
             destaqueInterval = setInterval(destacarAtividadeAtual, 60000); 
-        } else {
-            destacarAtividadeAtual();
         }
     }
 
