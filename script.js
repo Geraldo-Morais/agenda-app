@@ -66,21 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LÓGICA DA AGENDA ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
     function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
-    
-    // CORREÇÃO 2: Lógica de tarefas concluídas
-    async function salvarConcluidas() { 
-        const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); 
-        try { 
-            await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); 
-        } catch (error) { 
-            console.error("Erro ao salvar tarefas concluídas: ", error); 
-        } 
-    }
-    function aplicarConcluidas(ids = []) {
-        document.querySelectorAll('.atividade').forEach(el => {
-            el.classList.toggle('concluida', ids.includes(el.dataset.id));
-        });
-    }
+    async function salvarConcluidas() { const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); try { await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); } catch (error) { console.error("Erro ao salvar tarefas concluídas: ", error); } }
+    function aplicarConcluidas(ids = []) { document.querySelectorAll('.atividade').forEach(el => { el.classList.toggle('concluida', ids.includes(el.dataset.id)); }); }
     
     function renderizarAgenda() {
         if (!containerDias) return;
@@ -194,18 +181,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function salvarAlteracoesDoModal(diaId) {
-        loader.classList.add('ativo');
         const novasAtividades = [];
-        conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal').forEach(div => {
-            const id = div.dataset.id;
-            const descricao = div.querySelector('.input-descricao').value;
-            const inicio = div.querySelectorAll('.input-horario')[0].value;
-            const fim = div.querySelectorAll('.input-horario')[1].value;
-            if (descricao) { 
+        const linhasDeAtividade = conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal');
+        
+        linhasDeAtividade.forEach(div => {
+            const descricao = div.querySelector('.input-descricao').value.trim();
+            if (descricao) { // Só processa se tiver descrição
+                const id = div.dataset.id;
+                const inicio = div.querySelectorAll('.input-horario')[0].value;
+                const fim = div.querySelectorAll('.input-horario')[1].value;
                 novasAtividades.push({ id: id.startsWith('temp-') ? `${diaId}-${Date.now()}` : id, descricao, inicio, fim });
             }
         });
-        
+
+        // CORREÇÃO 2: Validação para não salvar atividades vazias
+        if (novasAtividades.length === 0 && linhasDeAtividade.length > 0) {
+            mostrarToast('Preencha a descrição da atividade para salvar.', 'info');
+            return; // Interrompe o salvamento
+        }
+
+        loader.classList.add('ativo');
         const novaAgenda = { ...agenda, [diaId]: novasAtividades };
 
         agendaDocRef.set(novaAgenda)
@@ -300,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
         
-        // CORREÇÃO 1: Botão Adicionar Atividade
         btnAddAtividadeModal.addEventListener('click', () => {
             if (conteudoModalEdicao.querySelector('.container-copia')) {
                 renderizarEditorDeAtividades([]);
@@ -309,10 +303,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         conteudoModalEdicao.addEventListener('click', (e) => {
-            if(e.target.classList.contains('btn-remover-modal')) {
-                e.target.closest('.atividade-editavel-modal').remove();
+            if (e.target.classList.contains('btn-remover-modal')) {
+                const linhaParaRemover = e.target.closest('.atividade-editavel-modal');
+                linhaParaRemover.remove();
+                
+                // CORREÇÃO 1: Volta para o menu de cópia se apagar a última atividade
+                const atividadesRestantes = conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal').length;
+                if (atividadesRestantes === 0) {
+                    const diaId = modalEditarDia.dataset.diaId;
+                    renderizarOpcoesDeCopia(diaId);
+                }
             }
-            if(e.target.classList.contains('botao-copia')) {
+            if (e.target.classList.contains('botao-copia')) {
                 copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
             }
         });
@@ -323,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loader.classList.remove('ativo');
         });
         
-        // CORREÇÃO 2: Listener de tarefas concluídas
         concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
             const ids = doc.exists ? doc.data().ids : [];
             aplicarConcluidas(ids);
