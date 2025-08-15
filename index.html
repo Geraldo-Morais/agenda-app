@@ -20,35 +20,17 @@
         <div class="loader-spinner"></div>
     </div>
 
-    <div class="titulo-principal-container">
-        <h1 id="titulo-principal"></h1>
-    </div>
-
     <header class="main-header">
-        <div class="botoes-controle">
-            <button id="btn-resetar" class="botao-secundario" style="display: none;">Resetar</button>
-            
-            <button id="btn-cancelar" class="botao" style="display: none;">Cancelar</button>
-            <button id="btn-editar" class="botao">Editar</button>
-
-            <div class="settings-menu-container">
-                <button id="btn-settings" class="botao-icone">🎨</button>
-                <div id="settings-dropdown" class="settings-dropdown">
-                    <div class="sync-container">
-                        <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
-                        <label class="switch">
-                            <input type="checkbox" id="sync-theme-checkbox">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    <div class="theme-switcher">
-                        <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
-                        <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
-                        <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
-                        <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
-                    </div>
-                </div>
-            </div>
+        <div class="titulo-principal-container">
+            <h1 id="titulo-principal"></h1>
+        </div>
+        <div id="botoes-controle" class="botoes-controle">
+            <button id="btn-editar" class="botao">Editar Atividades</button>
+            <button id="btn-settings" class="botao">🎨</button>
+        </div>
+        <div id="botoes-edicao" class="botoes-controle" style="display: none;">
+             <button id="btn-cancelar" class="botao">Cancelar</button>
+             <button id="btn-salvar" class="botao salvar">Salvar</button>
         </div>
     </header>
 
@@ -64,6 +46,26 @@
             <ul id="lista-dias-copia"></ul>
             <button id="btn-add-avulso" class="botao">Adicionar Tarefa em Branco</button>
             <button id="btn-cancelar-copia" class="botao-secundario">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal-conteudo">
+            <button id="btn-fechar-settings" class="botao-fechar-modal">X</button>
+            <h3>Configurações de Tema</h3>
+            <div class="sync-container">
+                <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
+                <label class="switch">
+                    <input type="checkbox" id="sync-theme-checkbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
+                <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
+                <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
+                <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
+            </div>
         </div>
     </div>
     
