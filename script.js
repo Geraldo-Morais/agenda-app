@@ -63,11 +63,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LÓGICA DA AGENDA (VISUALIZAÇÃO) ---
+    // --- LÓGICA DA AGENDA ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
     function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
-    async function salvarConcluidas() { const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); try { await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); } catch (error) { console.error("Erro ao salvar tarefas concluídas: ", error); } }
-    function aplicarConcluidas(ids = []) { document.querySelectorAll('.atividade').forEach(el => { el.classList.toggle('concluida', ids.includes(el.dataset.id)); }); }
+    
+    // CORREÇÃO 2: Lógica de tarefas concluídas
+    async function salvarConcluidas() { 
+        const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); 
+        try { 
+            await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); 
+        } catch (error) { 
+            console.error("Erro ao salvar tarefas concluídas: ", error); 
+        } 
+    }
+    function aplicarConcluidas(ids = []) {
+        document.querySelectorAll('.atividade').forEach(el => {
+            el.classList.toggle('concluida', ids.includes(el.dataset.id));
+        });
+    }
     
     function renderizarAgenda() {
         if (!containerDias) return;
@@ -133,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderizarEditorDeAtividades(atividades) {
         conteudoModalEdicao.innerHTML = '';
-        if(atividades.length > 0) {
+        if (atividades.length > 0) {
             atividades.forEach(atv => conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel(atv)));
         }
         rodapeModalEdicao.style.display = 'flex';
@@ -287,8 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
         
+        // CORREÇÃO 1: Botão Adicionar Atividade
         btnAddAtividadeModal.addEventListener('click', () => {
-            if(conteudoModalEdicao.querySelector('.container-copia')) {
+            if (conteudoModalEdicao.querySelector('.container-copia')) {
                 renderizarEditorDeAtividades([]);
             }
             conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel());
@@ -309,12 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
             loader.classList.remove('ativo');
         });
         
+        // CORREÇÃO 2: Listener de tarefas concluídas
         concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
-            if (doc.exists) {
-                aplicarConcluidas(doc.data().ids);
-            } else {
-                aplicarConcluidas([]); // Garante que limpe se o doc for deletado
-            }
+            const ids = doc.exists ? doc.data().ids : [];
+            aplicarConcluidas(ids);
         });
     }
 
