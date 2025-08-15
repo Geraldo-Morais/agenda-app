@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal de Configurações
     const btnSettings = document.getElementById('btn-settings');
     const modalSettings = document.getElementById('modal-settings');
+    const syncThemeCheckbox = document.getElementById('sync-theme-checkbox');
     
     // Modal de Edição de Dia
     const modalEditarDia = document.getElementById('modal-editar-dia');
@@ -39,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
     
+    // Outros Modals
+    const modalCopiar = document.getElementById('modal-copiar');
+
     // Variáveis de estado
     let modoSelecao = false;
     let agenda = {};
@@ -62,14 +66,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LÓGICA DA AGENDA (VISUALIZAÇÃO) ---
+    // --- LÓGICA DA AGENDA ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
+    function getChaveDeHoje() { const hoje = new Date(); const ano = hoje.getFullYear(); const mes = String(hoje.getMonth() + 1).padStart(2, '0'); const dia = String(hoje.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}`; }
     
+    // CÓDIGO RESTAURADO: Função para salvar tarefas concluídas
+    async function salvarConcluidas() { 
+        const concluidasIds = Array.from(document.querySelectorAll('.atividade.concluida')).map(el => el.dataset.id); 
+        try { 
+            await db.collection('concluidas').doc(getChaveDeHoje()).set({ ids: concluidasIds }); 
+        } catch (error) { 
+            console.error("Erro ao salvar tarefas concluídas: ", error); 
+        } 
+    }
+
+    // CÓDIGO RESTAURADO: Função para aplicar o status de concluído vindo do Firebase
+    function aplicarConcluidas(ids = []) {
+        document.querySelectorAll('.atividade').forEach(el => {
+            el.classList.toggle('concluida', ids.includes(el.dataset.id));
+        });
+    }
+
     function renderizarAgenda() {
         if (!containerDias) return;
         containerDias.innerHTML = '';
         const hoje = new Date();
         const diaDaSemanaDeHoje = hoje.getDay();
+
         mapaDosDias.forEach((nomeDia, index) => {
             const diaDiv = document.createElement('div');
             diaDiv.className = 'dia';
@@ -96,10 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const listaAtividades = document.createElement('ul');
             const atividadesDoDia = agenda[nomeDia] || [];
             
-            if (atividadesDoDia.length === 0 || (atividadesDoDia.length === 1 && atividadesDoDia[0].descricao === "Dia de descanso")) {
+            if (atividadesDoDia.length === 0) {
                 const mensagemVazio = document.createElement('p');
                 mensagemVazio.className = 'mensagem-dia-vazio';
-                mensagemVazio.textContent = modoSelecao ? "Clique para adicionar/copiar atividades." : (atividadesDoDia[0]?.descricao || "Nenhuma atividade.");
+                mensagemVazio.textContent = modoSelecao ? "Clique para adicionar/copiar atividades." : "Nenhuma atividade.";
                 listaAtividades.appendChild(mensagemVazio);
             } else {
                 atividadesDoDia.forEach(atividade => {
@@ -108,13 +131,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemLista.className = 'atividade';
                     const horario = atividade.inicio && atividade.fim ? `${atividade.inicio} - ${atividade.fim}` : (atividade.inicio || '');
                     itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${horario}</span>`;
-                    itemLista.addEventListener('click', () => { if (!modoSelecao) { itemLista.classList.toggle('concluida'); }});
+                    itemLista.addEventListener('click', () => { 
+                        if (!modoSelecao) { 
+                            itemLista.classList.toggle('concluida'); 
+                            salvarConcluidas(); // Ação de salvar ao clicar
+                        }
+                    });
                     listaAtividades.appendChild(itemLista);
                 });
             }
             conteudoDiv.appendChild(listaAtividades);
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
+        });
+        
+        // Carrega o status de concluído após renderizar
+        db.collection('concluidas').doc(getChaveDeHoje()).get().then(doc => {
+            if (doc.exists) {
+                aplicarConcluidas(doc.data().ids);
+            }
         });
     }
 
@@ -124,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         corpoPrincipal.classList.toggle('modo-selecao', ativo);
         botoesControleDiv.style.display = ativo ? 'none' : 'flex';
         botoesEdicaoSelecaoDiv.style.display = ativo ? 'flex' : 'none';
+        renderizarAgenda(); // Re-renderiza para mostrar o texto correto nos cards vazios
     }
 
     function abrirModalEdicao(diaId) {
@@ -133,9 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
         conteudoModalEdicao.innerHTML = '';
         const atividadesDoDia = agenda[diaId] || [];
         
-        // Se o dia está vazio, mostra opções de cópia
         if (atividadesDoDia.length === 0) {
-            rodapeModalEdicao.style.display = 'none'; // Esconde o rodapé padrão
+            rodapeModalEdicao.style.display = 'none';
             const containerCopia = document.createElement('div');
             containerCopia.innerHTML = '<h3>Este dia está vazio.</h3><p>Copiar atividades de:</p>';
             
@@ -153,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             containerCopia.appendChild(listaDiasCopia);
             conteudoModalEdicao.appendChild(containerCopia);
         } else {
-            // Se tem atividades, mostra o editor normal
             rodapeModalEdicao.style.display = 'flex';
             atividadesDoDia.forEach(atv => {
                 const divAtividade = document.createElement('div');
@@ -170,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         modalEditarDia.classList.add('visivel');
-        modalEditarDia.dataset.diaId = diaId; // Guarda o dia que está sendo editado
+        modalEditarDia.dataset.diaId = diaId;
     }
 
     function salvarAlteracoesDoModal(diaId) {
@@ -205,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function copiarAtividadesParaModal(diaFonte, diaDestino) {
         const atividadesCopiadas = JSON.parse(JSON.stringify(agenda[diaFonte]));
+        atividadesCopiadas.forEach(atv => atv.id = `${diaDestino}-${Date.now()}-${Math.random()}`);
         const novaAgenda = { ...agenda, [diaDestino]: atividadesCopiadas };
         
         agendaDocRef.set(novaAgenda)
@@ -238,15 +273,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         tituloPrincipalEl.textContent = `${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`.toUpperCase();
 
+        // CÓDIGO RESTAURADO: Listeners de Tema
         const themeSwitcher = document.querySelector('.theme-switcher');
-        const syncCheckbox = document.getElementById('sync-theme-checkbox');
         const isSyncEnabled = localStorage.getItem('themeSync') === 'true';
-        syncCheckbox.checked = isSyncEnabled;
-        if (isSyncEnabled) gerenciarListenerDeTema(true);
-        else applyTheme(localStorage.getItem('agendaTheme') || 'sunset');
-        
-        themeSwitcher.addEventListener('click', (e) => { /* ... (código existente) ... */ });
-        syncCheckbox.addEventListener('change', (e) => { /* ... (código existente) ... */ });
+        if (syncThemeCheckbox) syncThemeCheckbox.checked = isSyncEnabled;
+        if (isSyncEnabled) {
+            gerenciarListenerDeTema(true);
+        } else {
+            applyTheme(localStorage.getItem('agendaTheme') || 'sunset');
+        }
+        themeSwitcher.addEventListener('click', (e) => {
+            if (e.target.classList.contains('theme-btn')) {
+                const themeName = e.target.dataset.themeSet;
+                applyTheme(themeName); 
+                localStorage.setItem('agendaTheme', themeName);
+                if (syncThemeCheckbox && syncThemeCheckbox.checked) {
+                    saveThemeToCloud(themeName);
+                }
+            }
+        });
+        syncThemeCheckbox.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            localStorage.setItem('themeSync', enabled);
+            gerenciarListenerDeTema(enabled);
+            mostrarToast(enabled ? 'Sincronização ativada!' : 'Sincronização desativada.', enabled ? 'sucesso' : 'info');
+        });
         
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
         btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
@@ -257,12 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Listeners dos Modais
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal-overlay');
                 if (modal.id === 'modal-editar-dia') {
-                    fecharModalEdicao(); // Lógica especial para o modal de edição
+                    fecharModalEdicao();
                 } else {
                     modal.classList.remove('visivel');
                 }
@@ -278,16 +328,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if(e.target.classList.contains('btn-remover-modal')) {
                 e.target.closest('.atividade-editavel-modal').remove();
             }
-            if(e.target.dataset.diaFonte) { // Listener para os botões de cópia
+            if(e.target.dataset.diaFonte) {
                 copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
             }
         });
 
-        // Carregamento de Dados
+        // Carregamento de Dados da Agenda
         agendaDocRef.onSnapshot((doc) => {
             agenda = doc.exists ? doc.data() : {};
             renderizarAgenda();
             loader.classList.remove('ativo');
+        });
+        
+        // CÓDIGO RESTAURADO: Listener de tarefas concluídas
+        concluidasListener = db.collection('concluidas').doc(getChaveDeHoje()).onSnapshot((doc) => {
+            if (doc.exists) {
+                aplicarConcluidas(doc.data().ids);
+            }
         });
     }
 
