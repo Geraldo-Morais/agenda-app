@@ -208,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 mostrarToast('Alterações salvas com sucesso!');
                 agenda = novaAgenda;
                 fecharModalEdicao();
+                // CHAMA A INTERFACE ANDROID PARA SINCRONIZAR
+                if (window.Android) {
+                    window.Android.onAgendaUpdated();
+                }
             })
             .catch(err => mostrarToast('Erro ao salvar.', 'info'))
             .finally(() => loader.classList.remove('ativo'));
