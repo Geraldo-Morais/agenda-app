@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messagingSenderId: "509913679664",
         appId: "1:509913679664:web:9e251227071260b55e2af5"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const agendaDocRef = db.collection('agendas').doc('minhaAgenda');
@@ -177,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function inicializar() {
+    async function inicializar() {
         if (tituloPrincipalEl) {
             const hoje = new Date();
             const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -197,13 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        // Listener em tempo real do Firebase
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
             renderizarAgenda();
         }, (error) => {
             console.error("Erro ao ouvir a agenda: ", error);
             mostrarToast("Erro de conexão com a agenda online.", "info");
-            agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao;
+            agenda = JSON.parse(localStorage.getItem('minhaAgenda')) || agendaPadrao; // Fallback para localStorage
             renderizarAgenda();
         });
 
