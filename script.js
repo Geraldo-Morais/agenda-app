@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     
     const mensagensFofas = [ 'Você conseguiu, Bea! <3', 'Dia concluído com sucesso, Bezinha! ✨', 'Parabéns, Amor! Todas as tarefas foram feitas! 🎉', 'Você é incrível, B! Mais um dia perfeito! ❤️', 'Isso aí, meu bem! Dia finalizado com maestria! 🥂' ];
-
     const agendaPadrao = {
         domingo: [{ id: 'dom-descanso', descricao: 'Dia de descanso', inicio: '', fim: '' }],
         segunda: [ { id: 'seg-estagio', descricao: 'Estágio', inicio: '07:00', fim: '12:30' }, { id: 'seg-frontend', descricao: 'Aula Front-End', inicio: '13:00', fim: '15:00' }, { id: 'seg-revisao', descricao: 'Revisão Front', inicio: '16:30', fim: '18:00' }, { id: 'seg-contratos', descricao: 'Teoria Geral dos Contratos', inicio: '19:00', fim: '22:00' }, ],
@@ -174,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tituloPrincipalEl.textContent = `Agenda - ${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
         }
         
-        // --- INÍCIO DA CORREÇÃO ---
         if (window.localStorage) {
             const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -189,25 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } else {
-            console.warn('LocalStorage não está disponível. O tema não será salvo.');
+            console.warn('LocalStorage não está disponível.');
             document.documentElement.setAttribute('data-theme', 'sunset');
         }
-        // --- FIM DA CORREÇÃO ---
         
         agendaDocRef.onSnapshot((doc) => {
             if (doc.exists) { agenda = doc.data(); } else { agendaDocRef.set(agendaPadrao); agenda = agendaPadrao; }
             renderizarAgenda();
-            
             if(loader) loader.style.display = 'none';
             if(mainHeader) mainHeader.style.display = 'flex';
             if(agendaContainer) agendaContainer.style.display = 'flex';
-            
-            if (concluidasListener) { concluidasListener(); }
-            const concluidasDocRef = db.collection('concluidas').doc(getChaveDeHoje());
-            concluidasListener = concluidasDocRef.onSnapshot((concluidasDoc) => {
-                const ids = concluidasDoc.exists && concluidasDoc.data().ids ? concluidasDoc.data().ids : [];
-                aplicarConcluidas(ids);
-            });
         }, (error) => {
             console.error("Erro ao ouvir a agenda principal: ", error);
             mostrarToast("Erro de conexão.", "info");
@@ -216,6 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if(loader) loader.style.display = 'none';
             if(mainHeader) mainHeader.style.display = 'flex';
             if(agendaContainer) agendaContainer.style.display = 'flex';
+        });
+
+        const concluidasDocRef = db.collection('concluidas').doc(getChaveDeHoje());
+        if (concluidasListener) { concluidasListener(); }
+        concluidasListener = concluidasDocRef.onSnapshot((concluidasDoc) => {
+            const ids = concluidasDoc.exists && concluidasDoc.data().ids ? concluidasDoc.data().ids : [];
+            aplicarConcluidas(ids);
         });
 
         if(!isVistaDiaria) {
