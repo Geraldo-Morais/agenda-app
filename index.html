@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-    <script src="audio.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body class="corpo-principal">
@@ -39,42 +39,23 @@
     </main>
     
     <div id="toast" class="toast"></div>
-    <div id="modal-parabens" class="modal-overlay">
-        <div class="modal-conteudo parabens-modal">
-            <h2>Parabéns!</h2>
-            <p id="mensagem-parabens">Você concluiu todas as suas metas de hoje!</p>
-            <button id="btn-fechar-parabens" class="botao">Fechar</button>
-        </div>
-    </div>
 
     <div id="modal-settings" class="modal-overlay">
         <div class="modal-conteudo">
             <button class="botao-fechar-modal">X</button>
             <h3>Configurações de Tema</h3>
+            <div class="sync-container">
+                <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
+                <label class="switch">
+                    <input type="checkbox" id="sync-theme-checkbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
             <div class="theme-switcher">
                 <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
                 <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
                 <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
-                <button class="theme-btn" data-theme-set="forest" title="Floresta"></button>
                 <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
-            </div>
-            <hr style="width:100%; border-color:rgba(0,0,0,0.1); margin: 1.5rem 0;">
-            <div class="backup-container">
-                <h3>Backup e Restauração</h3>
-                <p>Salve sua rotina ou restaure a partir de um arquivo.</p>
-                <div class="botoes-acao-modal">
-                    <button id="btn-exportar" class="botao-modal">Exportar</button>
-                    <button id="btn-importar" class="botao-modal">Importar</button>
-                    <input type="file" id="input-import-file" style="display: none;" accept=".json">
-                </div>
-            </div>
-            <hr style="width:100%; border-color:rgba(0,0,0,0.1); margin: 1.5rem 0;">
-            <div class="sound-container">
-                <h3>Som</h3>
-                <label class="switch">
-                    <input type="checkbox" id="sound-checkbox">
-                    <span class="slider round"></span>
-                </label>
             </div>
         </div>
     </div>
@@ -94,24 +75,11 @@
             </div>
         </div>
     </div>
-
-    <div id="modal-detalhes-atividade" class="modal-overlay">
-        <div class="modal-conteudo">
-            <button class="botao-fechar-modal">X</button>
-            <h3 id="detalhes-titulo"></h3>
-            <p id="detalhes-horario"></p>
-            <textarea id="detalhes-notas" placeholder="Adicione suas notas aqui..."></textarea>
-            <div class="botoes-acao-modal">
-                <button id="btn-salvar-notas" class="botao-modal salvar">Salvar Notas</button>
-                <button id="btn-concluir-tarefa" class="botao-modal">Marcar como Concluída</button>
-            </div>
-        </div>
-    </div>
     
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('pwabuilder-sw.js', { scope: '/' })
+          navigator.serviceWorker.register('/agenda-app/pwabuilder-sw.js', { scope: '/agenda-app/' })
             .then(reg => console.log('Service Worker registrado com sucesso!', reg))
             .catch(err => console.log('Falha ao registrar o Service Worker:', err));
         });

@@ -1,122 +1,74 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURAÇÃO E REFERÊNCIAS ---
-    const canal = new BroadcastChannel('agenda_channel');
+    const firebaseConfig = {
+        apiKey: "AIzaSyAYhpZykVwZ-_KVkgx5iGBAITKtcuZMfUQ",
+        authDomain: "agenda-da-bea.firebaseapp.com",
+        projectId: "agenda-da-bea",
+        storageBucket: "agenda-da-bea.appspot.com",
+        messagingSenderId: "509913679664",
+        appId: "1:509913679664:web:9e251227071260b55e2af5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
+    let agendaTemplateRef;
+    let semanaDocRef;
+    let userUid;
+
+    // --- ELEMENTOS DO DOM ---
     const corpoPrincipal = document.querySelector('.corpo-principal');
     const loader = document.getElementById('loader');
     const containerDias = document.getElementById('container-dias');
     const tituloPrincipalEl = document.getElementById('titulo-principal');
     const toastEl = document.getElementById('toast');
     
-    // Botões e Modals
-    const botoesControleDiv = document.getElementById('botoes-controle');
-    const botoesEdicaoSelecaoDiv = document.getElementById('botoes-edicao-selecao');
+    // Modals e Botões
     const btnEditar = document.getElementById('btn-editar');
     const btnCancelarSelecao = document.getElementById('btn-cancelar-selecao');
-    
-    const modalSettings = document.getElementById('modal-settings');
     const modalEditarDia = document.getElementById('modal-editar-dia');
     const tituloModalEdicao = document.getElementById('titulo-modal-edicao');
     const conteudoModalEdicao = document.getElementById('conteudo-modal-edicao');
-    const rodapeModalEdicao = document.getElementById('rodape-modal-edicao');
     const btnSalvarEdicaoModal = document.getElementById('btn-salvar-edicao-modal');
-    const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
 
-    const modalParabens = document.getElementById('modal-parabens');
-    const mensagemParabensEl = document.getElementById('mensagem-parabens');
-    const btnFecharParabens = document.getElementById('btn-fechar-parabens');
-
-    const modalDetalhes = document.getElementById('modal-detalhes-atividade');
-    const detalhesTitulo = document.getElementById('detalhes-titulo');
-    const detalhesHorario = document.getElementById('detalhes-horario');
-    const detalhesNotas = document.getElementById('detalhes-notas');
-    const btnSalvarNotas = document.getElementById('btn-salvar-notas');
-    const btnConcluirTarefa = document.getElementById('btn-concluir-tarefa');
-    const soundCheckbox = document.getElementById('sound-checkbox');
-
-    // Variáveis de estado
+    // --- VARIÁVEIS DE ESTADO ---
     let modoSelecao = false;
     let agendaDaSemana = {};
     let agendaTemplate = {};
-    let semanaIdAtual = '';
-    let atividadeAtual = null;
-    let diaAtividadeAtual = '';
-    let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+    let semanaListener = null;
 
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-    const mensagensDeParabens = [
-        "Você é imparável! Metas do dia concluídas!",
-        "Incrível! Mais um dia produtivo na sua conta.",
-        "Parabéns! Você arrasou e completou tudo.",
-        "É isso aí! Continue brilhando e conquistando seus objetivos.",
-        "Missão cumprida! Descanse, você merece."
-    ];
-    
-    // --- LÓGICA DE TEMA E SINCRONIZAÇÃO ---
-    function applyTheme(themeName) {
-        document.documentElement.setAttribute('data-theme', themeName || 'sunset');
-        localStorage.setItem('agendaTheme', themeName || 'sunset');
-    }
 
-    function notificarMudanca(tipo, dados) {
-        canal.postMessage({ type: tipo, payload: dados });
-    }
-
-    canal.onmessage = (event) => {
-        const { type, payload } = event.data;
-        if (type === 'theme_change') {
-            applyTheme(payload.theme);
-        } else if (type === 'agenda_change') {
-            carregarDados(false);
-        }
+    // --- FUNÇÕES AUXILIARES ---
+    const mostrarToast = (mensagem, tipo = 'sucesso') => {
+        toastEl.textContent = mensagem;
+        toastEl.className = `toast ${tipo} show`;
+        setTimeout(() => toastEl.classList.remove('show'), 4000);
     };
 
-    // --- LÓGICA DA AGENDA (localStorage) ---
-    function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
-    
-    function getWeekId(d) {
+    const getWeekId = (d) => {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
         const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
         const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
-    }
+    };
 
-    function salvarAgendaDaSemana() {
-        localStorage.setItem(`semana_${semanaIdAtual}`, JSON.stringify(agendaDaSemana));
-        notificarMudanca('agenda_change');
-    }
-
-    function verificarConclusaoDoDia(diaId) {
-        const atividadesDoDia = agendaDaSemana[diaId] || [];
-        if (atividadesDoDia.length > 0 && atividadesDoDia.every(atv => atv.concluida)) {
-            const mensagemAleatoria = mensagensDeParabens[Math.floor(Math.random() * mensagensDeParabens.length)];
-            mensagemParabensEl.textContent = mensagemAleatoria;
-            modalParabens.classList.add('visivel');
-            if (soundEnabled) {
-                playSound('complete');
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-            }
-        }
-    }
-
-    function toggleConcluida(diaId, atividadeId) {
+    // --- LÓGICA DA AGENDA COM FIREBASE ---
+    const toggleConcluida = async (diaId, atividadeId) => {
         const atividade = agendaDaSemana[diaId].find(atv => atv.id === atividadeId);
         if (atividade) {
             atividade.concluida = !atividade.concluida;
-            if(soundEnabled) playSound('click');
-            salvarAgendaDaSemana();
-            renderizarAgenda();
-            const hoje = new Date();
-            const nomeDiaHoje = mapaDosDias[hoje.getDay()];
-            if(diaId === nomeDiaHoje) {
-                verificarConclusaoDoDia(diaId);
+            try {
+                await semanaDocRef.update({ [diaId]: agendaDaSemana[diaId] });
+            } catch (error) {
+                mostrarToast('Erro ao atualizar tarefa.', 'info');
             }
         }
-    }
+    };
 
-    function renderizarAgenda() {
+    const renderizarAgenda = () => {
         if (!containerDias) return;
         containerDias.innerHTML = '';
         const hoje = new Date();
@@ -126,11 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.className = 'dia';
             diaDiv.id = nomeDia;
             if (index === diaDaSemanaDeHoje) diaDiv.classList.add('hoje');
-            
+
             diaDiv.addEventListener('click', () => {
-                if (modoSelecao) {
-                    abrirModalEdicao(nomeDia);
-                }
+                if (modoSelecao) abrirModalEdicao(nomeDia);
             });
 
             const numeroDiaEl = document.createElement('span');
@@ -145,29 +95,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const tituloContainer = document.createElement('div');
             tituloContainer.className = 'titulo-dia-container';
             const tituloDia = document.createElement('h2');
-            let nomeCapitalizado = nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1);
-            tituloDia.textContent = (nomeDia !== 'sabado' && nomeDia !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado;
-
-            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
-            const concluidas = atividadesDoDia.filter(atv => atv.concluida).length;
-            const total = atividadesDoDia.length;
-
-            if (total > 0) {
-                const contador = document.createElement('span');
-                contador.className = 'contador-progresso';
-                contador.textContent = `${concluidas}/${total}`;
-                tituloContainer.appendChild(contador);
-            }
-
+            tituloDia.textContent = (nomeDia !== 'sabado' && nomeDia !== 'domingo') ? `${nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1)}-feira` : nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1);
             tituloContainer.appendChild(tituloDia);
             conteudoDiv.appendChild(tituloContainer);
 
             const listaAtividades = document.createElement('ul');
+            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
             
             if (atividadesDoDia.length === 0) {
                 const mensagemVazio = document.createElement('p');
                 mensagemVazio.className = 'mensagem-dia-vazio';
-                mensagemVazio.textContent = modoSelecao ? "Clique para adicionar/copiar atividades." : "Nenhuma atividade.";
+                mensagemVazio.textContent = modoSelecao ? "Clique para adicionar" : "Nenhuma atividade.";
                 listaAtividades.appendChild(mensagemVazio);
             } else {
                 atividadesDoDia.forEach(atividade => {
@@ -175,11 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemLista.dataset.id = atividade.id;
                     itemLista.className = 'atividade';
                     if (atividade.concluida) itemLista.classList.add('concluida');
-                    itemLista.innerHTML = `<span class="atividade-icon">${atividade.icon || '📝'}</span><span class="descricao">${atividade.descricao}</span><span class="horario">${atividade.inicio || ''}</span>`;
+                    itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${atividade.inicio || ''}</span>`;
                     itemLista.addEventListener('click', (e) => {
                         if (!modoSelecao) {
-                            e.stopPropagation(); // Impede que o clique no card do dia seja acionado
-                            abrirDetalhesAtividade(nomeDia, atividade.id);
+                            e.stopPropagation();
+                            toggleConcluida(nomeDia, atividade.id);
                         }
                     });
                     listaAtividades.appendChild(itemLista);
@@ -189,306 +127,140 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
         });
-    }
-
-    // --- LÓGICA DE DETALHES DA ATIVIDADE ---
-    function abrirDetalhesAtividade(diaId, atividadeId) {
-        diaAtividadeAtual = diaId;
-        atividadeAtual = agendaDaSemana[diaId].find(atv => atv.id === atividadeId);
-        if (!atividadeAtual) return;
-
-        detalhesTitulo.textContent = `${atividadeAtual.icon || '📝'} ${atividadeAtual.descricao}`;
-        detalhesHorario.textContent = atividadeAtual.inicio && atividadeAtual.fim ? `${atividadeAtual.inicio} - ${atividadeAtual.fim}` : (atividadeAtual.inicio || 'Horário não definido');
-        detalhesNotas.value = atividadeAtual.notas || '';
-
-        btnConcluirTarefa.textContent = atividadeAtual.concluida ? 'Desmarcar Conclusão' : 'Marcar como Concluída';
-
-        modalDetalhes.classList.add('visivel');
-    }
-
-    function salvarNotas() {
-        if (atividadeAtual) {
-            atividadeAtual.notas = detalhesNotas.value;
-            salvarAgendaDaSemana();
-            mostrarToast('Notas salvas com sucesso!');
-        }
-    }
+    };
 
     // --- FLUXO DE EDIÇÃO ---
-    function alternarModoSelecao(ativo) {
+    const alternarModoSelecao = (ativo) => {
         modoSelecao = ativo;
         corpoPrincipal.classList.toggle('modo-selecao', ativo);
-        botoesControleDiv.style.display = ativo ? 'none' : 'flex';
-        botoesEdicaoSelecaoDiv.style.display = ativo ? 'flex' : 'none';
+        document.getElementById('botoes-controle').style.display = ativo ? 'none' : 'flex';
+        document.getElementById('botoes-edicao-selecao').style.display = ativo ? 'flex' : 'none';
         renderizarAgenda();
-    }
+    };
 
-    function renderizarEditorDeAtividades(atividades) {
-        conteudoModalEdicao.innerHTML = '';
-        if (atividades.length > 0) {
-            atividades.forEach(atv => conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel(atv)));
-        }
-        rodapeModalEdicao.style.display = 'flex';
-        btnSalvarEdicaoModal.style.display = 'inline-flex';
-    }
-
-    function renderizarOpcoesDeCopia(diaId) {
-        conteudoModalEdicao.innerHTML = '';
-        const containerCopia = document.createElement('div');
-        containerCopia.className = 'container-copia';
-        containerCopia.innerHTML = '<h3>Este dia está vazio.</h3><p>Copiar atividades de:</p>';
-        
-        const listaDias = document.createElement('ul');
-        listaDias.className = 'lista-dias-copia-modal';
-        mapaDosDias.forEach(diaFonte => {
-            if (diaFonte !== diaId && agendaTemplate[diaFonte] && agendaTemplate[diaFonte].length > 0) {
-                let nomeFonteCapitalizado = diaFonte.charAt(0).toUpperCase() + diaFonte.slice(1);
-                const nomeCompleto = (diaFonte !== 'sabado' && diaFonte !== 'domingo') ? `${nomeFonteCapitalizado}-feira` : nomeFonteCapitalizado;
-                const item = document.createElement('li');
-                item.innerHTML = `<button class="botao-copia" data-dia-fonte="${diaFonte}">${nomeCompleto}</button>`;
-                listaDias.appendChild(item);
-            }
-        });
-        containerCopia.appendChild(listaDias);
-        conteudoModalEdicao.appendChild(containerCopia);
-
-        rodapeModalEdicao.style.display = 'flex';
-        btnSalvarEdicaoModal.style.display = 'none';
-    }
-
-    function abrirModalEdicao(diaId) {
-        let nomeCapitalizado = diaId.charAt(0).toUpperCase() + diaId.slice(1);
-        tituloModalEdicao.textContent = `Editando ${ (diaId !== 'sabado' && diaId !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado}`;
-        
-        const atividadesDoDia = agendaTemplate[diaId] || [];
-        
-        if (atividadesDoDia.length === 0) {
-            renderizarOpcoesDeCopia(diaId);
-        } else {
-            renderizarEditorDeAtividades(atividadesDoDia);
-            new Sortable(conteudoModalEdicao, {
-                animation: 150,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost',
-            });
-        }
-
-        modalEditarDia.classList.add('visivel');
-        modalEditarDia.dataset.diaId = diaId;
-    }
-
-    function salvarAlteracoesDoModal(diaId) {
-        const novasAtividades = [];
-        const linhasDeAtividade = conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal');
-        
-        linhasDeAtividade.forEach(div => {
-            const descricao = div.querySelector('.input-descricao').value.trim();
-            if (descricao) {
-                const id = div.dataset.id;
-                const icon = div.querySelector('.input-icon').value;
-                const inicio = div.querySelectorAll('.input-horario')[0].value;
-                const fim = div.querySelectorAll('.input-horario')[1].value;
-                novasAtividades.push({ id: id.startsWith('temp-') ? `${diaId}-${Date.now()}` : id, icon, descricao, inicio, fim, notas: '' });
-            }
-        });
-
-        if (novasAtividades.length === 0 && linhasDeAtividade.length > 0) {
-            mostrarToast('Preencha a descrição da atividade para salvar.', 'info');
-            return;
-        }
-
-        agendaTemplate[diaId] = novasAtividades;
-        localStorage.setItem('agendaTemplate', JSON.stringify(agendaTemplate));
-        mostrarToast('Template de agenda salvo com sucesso!');
-        fecharModalEdicao();
-
-        if (confirm("Deseja aplicar estas alterações à semana atual?")) {
-            atualizarSemanaComTemplate();
-            mostrarToast('Semana atualizada com as novas atividades!');
-        }
-    }
-
-    function atualizarSemanaComTemplate() {
-        const templateCompletado = JSON.parse(JSON.stringify(agendaTemplate));
-        Object.keys(templateCompletado).forEach(dia => {
-            templateCompletado[dia].forEach(atv => {
-                atv.concluida = false;
-                atv.notas = atv.notas || '';
-            });
-        });
-        agendaDaSemana = templateCompletado;
-        salvarAgendaDaSemana();
-        renderizarAgenda();
-    }
-
-    function fecharModalEdicao() {
-        modalEditarDia.classList.remove('visivel');
-        alternarModoSelecao(false);
-    }
-    
-    function copiarAtividadesParaModal(diaFonte, diaDestino) {
-        const atividadesCopiadas = JSON.parse(JSON.stringify(agendaTemplate[diaFonte]));
-        atividadesCopiadas.forEach(atv => atv.id = `${diaDestino}-${Date.now()}-${Math.random()}`);
-        renderizarEditorDeAtividades(atividadesCopiadas);
-    }
-
-    function criarLinhaDeAtividadeEditavel(atividade = {}) {
-        const divAtividade = document.createElement('div');
-        divAtividade.className = 'atividade-editavel-modal';
-        divAtividade.dataset.id = atividade.id || `temp-${Date.now()}`;
-        divAtividade.innerHTML = `
-            <span class="drag-handle">☰</span>
-            <input type="text" class="input-icon" value="${atividade.icon || '📝'}" maxlength="2">
+    const criarLinhaDeAtividadeEditavel = (atividade = {}) => {
+        const div = document.createElement('div');
+        div.className = 'atividade-editavel-modal';
+        div.dataset.id = atividade.id || `temp-${Date.now()}`;
+        div.innerHTML = `
             <input type="text" class="input-descricao" value="${atividade.descricao || ''}" placeholder="Nova Atividade">
             <input type="time" class="input-horario" value="${atividade.inicio || ''}">
             <input type="time" class="input-horario" value="${atividade.fim || ''}">
             <button class="btn-remover-modal">X</button>
         `;
-        return divAtividade;
-    }
+        div.querySelector('.btn-remover-modal').onclick = () => div.remove();
+        return div;
+    };
 
-    // --- FUNÇÕES DE INICIALIZAÇÃO E CARREGAMENTO ---
-    async function carregarDados(mostrarLoader = true) {
-        if(mostrarLoader) loader.classList.add('ativo');
+    const renderizarEditorDeAtividades = (atividades) => {
+        conteudoModalEdicao.innerHTML = '';
+        atividades.forEach(atv => conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel(atv)));
+    };
 
-        const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
-        applyTheme(savedTheme);
-        soundCheckbox.checked = soundEnabled;
+    const abrirModalEdicao = (diaId) => {
+        tituloModalEdicao.textContent = `Editando ${diaId.charAt(0).toUpperCase() + diaId.slice(1)}`;
+        const atividadesDoDia = agendaTemplate[diaId] || [];
+        renderizarEditorDeAtividades(atividadesDoDia);
+        modalEditarDia.classList.add('visivel');
+        modalEditarDia.dataset.diaId = diaId;
+    };
 
-        const templateJSON = localStorage.getItem('agendaTemplate');
-        if (templateJSON) {
-            agendaTemplate = JSON.parse(templateJSON);
-        } else {
-            try {
-                const response = await fetch('agenda.json');
-                agendaTemplate = await response.json();
-                localStorage.setItem('agendaTemplate', JSON.stringify(agendaTemplate));
-            } catch (error) {
-                console.error("Erro ao carregar agenda.json:", error);
-                mostrarToast('Não foi possível carregar o modelo de agenda.', 'info');
-                agendaTemplate = {};
-            }
-        }
-
-        semanaIdAtual = getWeekId(new Date());
-        const semanaJSON = localStorage.getItem(`semana_${semanaIdAtual}`);
-
-        if (semanaJSON) {
-            agendaDaSemana = JSON.parse(semanaJSON);
-        } else {
-            mostrarToast('Criando agenda para esta semana...', 'info');
-            atualizarSemanaComTemplate();
-        }
-
-        renderizarAgenda();
-        if(mostrarLoader) loader.classList.remove('ativo');
-    }
-
-    function inicializar() {
-        const hoje = new Date();
-        const nomeDosMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        tituloPrincipalEl.textContent = `${nomeDosMeses[hoje.getMonth()]} de ${hoje.getFullYear()}`.toUpperCase();
-
-        document.querySelector('.theme-switcher').addEventListener('click', (e) => {
-            if (e.target.classList.contains('theme-btn')) {
-                const theme = e.target.dataset.themeSet;
-                applyTheme(theme);
-                notificarMudanca('theme_change', { theme });
+    const salvarAlteracoesDoModal = async () => {
+        const diaId = modalEditarDia.dataset.diaId;
+        const novasAtividades = [];
+        conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal').forEach(div => {
+            const descricao = div.querySelector('.input-descricao').value.trim();
+            if (descricao) {
+                novasAtividades.push({
+                    id: div.dataset.id.startsWith('temp-') ? `${diaId}-${Date.now()}` : div.dataset.id,
+                    descricao,
+                    inicio: div.querySelectorAll('.input-horario')[0].value,
+                    fim: div.querySelectorAll('.input-horario')[1].value,
+                });
             }
         });
 
-        btnEditar.addEventListener('click', () => alternarModoSelecao(true));
-        btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
+        loader.classList.add('ativo');
+        const novoTemplate = { ...agendaTemplate, [diaId]: novasAtividades };
+        try {
+            await agendaTemplateRef.set(novoTemplate);
+            agendaTemplate = novoTemplate;
+            mostrarToast('Template salvo com sucesso!');
+            modalEditarDia.classList.remove('visivel');
+            if (confirm("Deseja aplicar as alterações à semana atual?")) {
+                await atualizarSemanaComTemplate();
+            }
+        } catch (error) {
+            mostrarToast('Erro ao salvar template.', 'info');
+        } finally {
+            loader.classList.remove('ativo');
+        }
+    };
 
-        document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.target.closest('.modal-overlay').classList.remove('visivel');
+    const atualizarSemanaComTemplate = async () => {
+        const templateCompletado = JSON.parse(JSON.stringify(agendaTemplate));
+        Object.keys(templateCompletado).forEach(dia => {
+            templateCompletado[dia].forEach(atv => atv.concluida = false);
+        });
+        try {
+            await semanaDocRef.set(templateCompletado);
+            mostrarToast('Semana atualizada!');
+        } catch (error) {
+            mostrarToast('Erro ao atualizar a semana.', 'info');
+        }
+    };
+    
+    // --- INICIALIZAÇÃO ---
+    const startApp = async (user) => {
+        userUid = user.uid;
+        agendaTemplateRef = db.collection('usuarios').doc(userUid).collection('agendas').doc('template');
+
+        const semanaId = getWeekId(new Date());
+        semanaDocRef = db.collection('usuarios').doc(userUid).collection('semanas').doc(semanaId);
+
+        loader.classList.add('ativo');
+
+        try {
+            const templateDoc = await agendaTemplateRef.get();
+            if (templateDoc.exists) {
+                agendaTemplate = templateDoc.data();
+            } else {
+                await agendaTemplateRef.set({}); // Cria um template vazio se não existir
+            }
+
+            const semanaDoc = await semanaDocRef.get();
+            if (!semanaDoc.exists) {
+                await atualizarSemanaComTemplate();
+            }
+
+            if (semanaListener) semanaListener();
+            semanaListener = semanaDocRef.onSnapshot((doc) => {
+                agendaDaSemana = doc.exists ? doc.data() : {};
+                renderizarAgenda();
+                loader.classList.remove('ativo');
             });
+        } catch (error) {
+            mostrarToast('Erro ao carregar dados. Verifique suas regras de segurança no Firebase.', 'info');
+            loader.classList.remove('ativo');
+        }
+
+        // Event Listeners
+        btnEditar.onclick = () => alternarModoSelecao(true);
+        btnCancelarSelecao.onclick = () => alternarModoSelecao(false);
+        btnAddAtividadeModal.onclick = () => conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel());
+        btnSalvarEdicaoModal.onclick = salvarAlteracoesDoModal;
+        document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
+            btn.onclick = (e) => e.target.closest('.modal-overlay').classList.remove('visivel');
         });
+    };
 
-        btnFecharParabens.addEventListener('click', () => modalParabens.classList.remove('visivel'));
-        btnSettings.addEventListener('click', () => modalSettings.classList.add('visivel'));
-
-        soundCheckbox.addEventListener('change', () => {
-            soundEnabled = soundCheckbox.checked;
-            localStorage.setItem('soundEnabled', soundEnabled);
-        });
-
-        // Lógica de Backup e Restauração
-        const btnExportar = document.getElementById('btn-exportar');
-        const btnImportar = document.getElementById('btn-importar');
-        const inputImportFile = document.getElementById('input-import-file');
-
-        btnExportar.addEventListener('click', () => {
-            const dataStr = JSON.stringify(agendaTemplate, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'minha_rotina.json';
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            mostrarToast('Rotina exportada com sucesso!');
-        });
-
-        btnImportar.addEventListener('click', () => {
-            inputImportFile.click();
-        });
-
-        inputImportFile.addEventListener('change', (event) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const novoTemplate = JSON.parse(e.target.result);
-                    if (typeof novoTemplate === 'object' && novoTemplate !== null) {
-                        agendaTemplate = novoTemplate;
-                        localStorage.setItem('agendaTemplate', JSON.stringify(agendaTemplate));
-                        mostrarToast('Rotina importada com sucesso!');
-                        if (confirm("Deseja aplicar a nova rotina à semana atual?")) {
-                            atualizarSemanaComTemplate();
-                        }
-                        modalSettings.classList.remove('visivel');
-                    } else {
-                        throw new Error("Formato de arquivo inválido.");
-                    }
-                } catch (error) {
-                    mostrarToast('Erro ao importar: ' + error.message, 'info');
-                }
-            };
-            reader.readAsText(event.target.files[0]);
-        });
-
-        btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
-        btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
-        
-        btnAddAtividadeModal.addEventListener('click', () => {
-            if (conteudoModalEdicao.querySelector('.container-copia')) {
-                renderizarEditorDeAtividades([]);
-            }
-            conteudoModalEdicao.appendChild(criarLinhaDeAtividadeEditavel());
-        });
-        
-        conteudoModalEdicao.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-remover-modal')) {
-                e.target.closest('.atividade-editavel-modal').remove();
-                if (conteudoModalEdicao.querySelectorAll('.atividade-editavel-modal').length === 0) {
-                    renderizarOpcoesDeCopia(modalEditarDia.dataset.diaId);
-                }
-            }
-            if (e.target.classList.contains('botao-copia')) {
-                copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
-            }
-        });
-
-        btnSalvarNotas.addEventListener('click', salvarNotas);
-        btnConcluirTarefa.addEventListener('click', () => {
-            if(atividadeAtual) {
-                toggleConcluida(diaAtividadeAtual, atividadeAtual.id);
-                modalDetalhes.classList.remove('visivel');
-            }
-        });
-
-        carregarDados();
-    }
-
-    inicializar();
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            startApp(user);
+        } else {
+            auth.signInAnonymously().catch((error) => {
+                mostrarToast('Falha na autenticação. O app pode não funcionar online.', 'info');
+            });
+        }
+    });
 });
