@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURAÇÃO E REFERÊNCIAS ---
-    // Removido Firebase. Usaremos localStorage.
+    const canal = new BroadcastChannel('agenda_channel');
+
     const corpoPrincipal = document.querySelector('.corpo-principal');
     const loader = document.getElementById('loader');
     const containerDias = document.getElementById('container-dias');
@@ -13,11 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnEditar = document.getElementById('btn-editar');
     const btnCancelarSelecao = document.getElementById('btn-cancelar-selecao');
     
-    // Modal de Configurações
-    const btnSettings = document.getElementById('btn-settings');
+    // Modals
     const modalSettings = document.getElementById('modal-settings');
-    
-    // Modal de Edição de Dia
     const modalEditarDia = document.getElementById('modal-editar-dia');
     const tituloModalEdicao = document.getElementById('titulo-modal-edicao');
     const conteudoModalEdicao = document.getElementById('conteudo-modal-edicao');
@@ -25,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalvarEdicaoModal = document.getElementById('btn-salvar-edicao-modal');
     const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
+    const modalParabens = document.getElementById('modal-parabens');
+    const btnFecharParabens = document.getElementById('btn-fechar-parabens');
 
     // Variáveis de estado
     let modoSelecao = false;
@@ -34,11 +34,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
     
-    // --- LÓGICA DE TEMA ---
+    // --- LÓGICA DE TEMA E SINCRONIZAÇÃO ---
     function applyTheme(themeName) {
         document.documentElement.setAttribute('data-theme', themeName || 'sunset');
         localStorage.setItem('agendaTheme', themeName || 'sunset');
     }
+
+    function notificarMudanca(tipo, dados) {
+        canal.postMessage({ type: tipo, payload: dados });
+    }
+
+    canal.onmessage = (event) => {
+        const { type, payload } = event.data;
+        if (type === 'theme_change') {
+            applyTheme(payload.theme);
+        } else if (type === 'agenda_change') {
+            carregarDados(false); // Recarrega os dados sem mostrar o loader
+        }
+    };
 
     // --- LÓGICA DA AGENDA (localStorage) ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
@@ -53,7 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function salvarAgendaDaSemana() {
         localStorage.setItem(`semana_${semanaIdAtual}`, JSON.stringify(agendaDaSemana));
+        notificarMudanca('agenda_change');
         notificarWidget();
+    }
+
+    function verificarConclusaoDoDia(diaId) {
+        const atividadesDoDia = agendaDaSemana[diaId] || [];
+        if (atividadesDoDia.length > 0 && atividadesDoDia.every(atv => atv.concluida)) {
+            modalParabens.classList.add('visivel');
+        }
     }
 
     function toggleConcluida(diaId, atividadeId) {
@@ -62,6 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
             atividade.concluida = !atividade.concluida;
             salvarAgendaDaSemana();
             renderizarAgenda();
+            const hoje = new Date();
+            const nomeDiaHoje = mapaDosDias[hoje.getDay()];
+            if(diaId === nomeDiaHoje) {
+                verificarConclusaoDoDia(diaId);
+            }
         }
     }
 
@@ -250,19 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- FUNÇÕES DE INICIALIZAÇÃO E CARREGAMENTO ---
-    async function carregarDados() {
-        loader.classList.add('ativo');
+    async function carregarDados(mostrarLoader = true) {
+        if(mostrarLoader) loader.classList.add('ativo');
 
-        // Carregar Tema
         const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
         applyTheme(savedTheme);
 
-        // Carregar Template da Agenda
         const templateJSON = localStorage.getItem('agendaTemplate');
         if (templateJSON) {
             agendaTemplate = JSON.parse(templateJSON);
         } else {
-            // Carregar do arquivo agenda.json como fallback
             try {
                 const response = await fetch('agenda.json');
                 agendaTemplate = await response.json();
@@ -270,11 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Erro ao carregar agenda.json:", error);
                 mostrarToast('Não foi possível carregar o modelo de agenda.', 'info');
-                agendaTemplate = {}; // Define um template vazio para evitar erros
+                agendaTemplate = {};
             }
         }
 
-        // Lógica da Semana
         semanaIdAtual = getWeekId(new Date());
         const semanaJSON = localStorage.getItem(`semana_${semanaIdAtual}`);
 
@@ -282,13 +304,12 @@ document.addEventListener('DOMContentLoaded', () => {
             agendaDaSemana = JSON.parse(semanaJSON);
         } else {
             mostrarToast('Criando agenda para esta semana...', 'info');
-            atualizarSemanaComTemplate(); // Cria a agenda da semana a partir do template
+            atualizarSemanaComTemplate();
         }
         
         renderizarAgenda();
-        loader.classList.remove('ativo');
+        if(mostrarLoader) loader.classList.remove('ativo');
     }
-
 
     function inicializar() {
         const hoje = new Date();
@@ -297,10 +318,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('.theme-switcher').addEventListener('click', (e) => {
             if (e.target.classList.contains('theme-btn')) {
-                applyTheme(e.target.dataset.themeSet);
+                const theme = e.target.dataset.themeSet;
+                applyTheme(theme);
+                notificarMudanca('theme_change', { theme });
             }
         });
-        // Remove a lógica de sync do tema, já que não usamos mais Firebase
         document.querySelector('.sync-container').style.display = 'none';
 
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
@@ -314,11 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const modal = e.target.closest('.modal-overlay');
-                if (modal.id === 'modal-editar-dia') fecharModalEdicao();
-                else modal.classList.remove('visivel');
+                e.target.closest('.modal-overlay').classList.remove('visivel');
             });
         });
+
+        btnFecharParabens.addEventListener('click', () => modalParabens.classList.remove('visivel'));
 
         btnSettings.addEventListener('click', () => modalSettings.classList.add('visivel'));
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));

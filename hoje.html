@@ -47,6 +47,7 @@
             const loader = document.getElementById('loader-widget');
             const listaAtividadesEl = document.getElementById('lista-atividades-widget');
             const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+            const canal = new BroadcastChannel('agenda_channel');
 
             function getWeekId(d) {
                 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -64,7 +65,6 @@
                 loader.style.display = 'block';
                 listaAtividadesEl.innerHTML = '';
 
-                // Carregar tema do localStorage
                 const themeName = localStorage.getItem('agendaTheme') || 'sunset';
                 applyTheme(themeName);
 
@@ -98,6 +98,15 @@
 
                 loader.style.display = 'none';
             }
+
+            canal.onmessage = (event) => {
+                const { type, payload } = event.data;
+                if (type === 'theme_change') {
+                    applyTheme(payload.theme);
+                } else if (type === 'agenda_change') {
+                    loadTodayTasks();
+                }
+            };
 
             loadTodayTasks();
         });

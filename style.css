@@ -255,3 +255,14 @@ input:checked + .slider:before { transform: translateX(22px); }
     .dias-semana { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .dia { min-height: 320px; padding: 0.75rem; }
 }
+
+.parabens-modal {
+    background: linear-gradient(135deg, #a8e6cf, #dcedc1);
+    color: #333;
+    text-align: center;
+}
+
+.parabens-modal h2 {
+    color: #2c6b57;
+    font-size: 2em;
+}

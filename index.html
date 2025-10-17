@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body class="corpo-principal">
@@ -36,12 +38,19 @@
     </main>
     
     <div id="toast" class="toast"></div>
+    <div id="modal-parabens" class="modal-overlay">
+        <div class="modal-conteudo parabens-modal">
+            <h2>Parabéns!</h2>
+            <p>Você concluiu todas as suas metas de hoje!</p>
+            <button id="btn-fechar-parabens" class="botao">Fechar</button>
+        </div>
+    </div>
 
     <div id="modal-settings" class="modal-overlay">
         <div class="modal-conteudo">
             <button class="botao-fechar-modal">X</button>
             <h3>Configurações de Tema</h3>
-            <div class="sync-container" style="display: none;">
+            <div class="sync-container">
                 <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
                 <label class="switch">
                     <input type="checkbox" id="sync-theme-checkbox">
