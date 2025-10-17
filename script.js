@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
     const modalParabens = document.getElementById('modal-parabens');
+    const mensagemParabensEl = document.getElementById('mensagem-parabens');
     const btnFecharParabens = document.getElementById('btn-fechar-parabens');
 
     // Variáveis de estado
@@ -33,6 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let semanaIdAtual = '';
 
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const mensagensDeParabens = [
+        "Você é imparável! Metas do dia concluídas!",
+        "Incrível! Mais um dia produtivo na sua conta.",
+        "Parabéns! Você arrasou e completou tudo.",
+        "É isso aí! Continue brilhando e conquistando seus objetivos.",
+        "Missão cumprida! Descanse, você merece."
+    ];
     
     // --- LÓGICA DE TEMA E SINCRONIZAÇÃO ---
     function applyTheme(themeName) {
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'theme_change') {
             applyTheme(payload.theme);
         } else if (type === 'agenda_change') {
-            carregarDados(false); // Recarrega os dados sem mostrar o loader
+            carregarDados(false);
         }
     };
 
@@ -67,12 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvarAgendaDaSemana() {
         localStorage.setItem(`semana_${semanaIdAtual}`, JSON.stringify(agendaDaSemana));
         notificarMudanca('agenda_change');
-        notificarWidget();
     }
 
     function verificarConclusaoDoDia(diaId) {
         const atividadesDoDia = agendaDaSemana[diaId] || [];
         if (atividadesDoDia.length > 0 && atividadesDoDia.every(atv => atv.concluida)) {
+            const mensagemAleatoria = mensagensDeParabens[Math.floor(Math.random() * mensagensDeParabens.length)];
+            mensagemParabensEl.textContent = mensagemAleatoria;
             modalParabens.classList.add('visivel');
         }
     }
@@ -116,11 +125,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const tituloDia = document.createElement('h2');
             let nomeCapitalizado = nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1);
             tituloDia.textContent = (nomeDia !== 'sabado' && nomeDia !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado;
+
+            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
+            const concluidas = atividadesDoDia.filter(atv => atv.concluida).length;
+            const total = atividadesDoDia.length;
+
+            if (total > 0) {
+                const contador = document.createElement('span');
+                contador.className = 'contador-progresso';
+                contador.textContent = `${concluidas}/${total}`;
+                tituloContainer.appendChild(contador);
+            }
+
             tituloContainer.appendChild(tituloDia);
             conteudoDiv.appendChild(tituloContainer);
 
             const listaAtividades = document.createElement('ul');
-            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
             
             if (atividadesDoDia.length === 0) {
                 const mensagemVazio = document.createElement('p');
@@ -197,6 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
             renderizarOpcoesDeCopia(diaId);
         } else {
             renderizarEditorDeAtividades(atividadesDoDia);
+            new Sortable(conteudoModalEdicao, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+            });
         }
 
         modalEditarDia.classList.add('visivel');
@@ -261,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         divAtividade.className = 'atividade-editavel-modal';
         divAtividade.dataset.id = atividade.id || `temp-${Date.now()}`;
         divAtividade.innerHTML = `
+            <span class="drag-handle">☰</span>
             <input type="text" class="input-descricao" value="${atividade.descricao || ''}" placeholder="Nova Atividade">
             <input type="time" class="input-horario" value="${atividade.inicio || ''}">
             <input type="time" class="input-horario" value="${atividade.fim || ''}">
@@ -323,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 notificarMudanca('theme_change', { theme });
             }
         });
-        document.querySelector('.sync-container').style.display = 'none';
 
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
         btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
@@ -343,6 +368,51 @@ document.addEventListener('DOMContentLoaded', () => {
         btnFecharParabens.addEventListener('click', () => modalParabens.classList.remove('visivel'));
 
         btnSettings.addEventListener('click', () => modalSettings.classList.add('visivel'));
+
+        // Lógica de Backup e Restauração
+        const btnExportar = document.getElementById('btn-exportar');
+        const btnImportar = document.getElementById('btn-importar');
+        const inputImportFile = document.getElementById('input-import-file');
+
+        btnExportar.addEventListener('click', () => {
+            const dataStr = JSON.stringify(agendaTemplate, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'minha_rotina.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            mostrarToast('Rotina exportada com sucesso!');
+        });
+
+        btnImportar.addEventListener('click', () => {
+            inputImportFile.click();
+        });
+
+        inputImportFile.addEventListener('change', (event) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const novoTemplate = JSON.parse(e.target.result);
+                    if (typeof novoTemplate === 'object' && novoTemplate !== null) {
+                        agendaTemplate = novoTemplate;
+                        localStorage.setItem('agendaTemplate', JSON.stringify(agendaTemplate));
+                        mostrarToast('Rotina importada com sucesso!');
+                        if (confirm("Deseja aplicar a nova rotina à semana atual?")) {
+                            atualizarSemanaComTemplate();
+                        }
+                        modalSettings.classList.remove('visivel');
+                    } else {
+                        throw new Error("Formato de arquivo inválido.");
+                    }
+                } catch (error) {
+                    mostrarToast('Erro ao importar: ' + error.message, 'info');
+                }
+            };
+            reader.readAsText(event.target.files[0]);
+        });
+
+
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
         

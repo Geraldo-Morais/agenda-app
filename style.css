@@ -146,7 +146,16 @@ body {
 .atividade .descricao { font-weight: 500; }
 .atividade .horario { font-size: 0.85rem; color: #6c757d; }
 .titulo-dia-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid; margin-bottom: 1rem; padding-bottom: 0.5rem; transition: border-color 0.3s ease;}
-.titulo-dia-container h2 { margin-bottom: 0; }
+.titulo-dia-container h2 { margin-bottom: 0; margin-left: auto; }
+.contador-progresso {
+    font-size: 0.8rem;
+    font-weight: 700;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-botao);
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--cor-borda-botao);
+}
 
 /* Toast & Loader */
 .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); color: white; padding: 1rem 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); transition: bottom 0.5s ease; z-index: 1000; }
@@ -181,6 +190,11 @@ body {
 #modal-editar-dia .modal-conteudo { max-height: 80vh; }
 .conteudo-modal-edicao { overflow-y: auto; padding-right: 10px; margin-bottom: 1rem; }
 .atividade-editavel-modal { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+.drag-handle { cursor: grab; color: #aaa; margin-right: 0.5rem; }
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #e3f2fd;
+}
 .atividade-editavel-modal input { border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; font-family: 'Roboto', sans-serif; font-size: 0.9rem; background-color: #fff; transition: border-color 0.2s; }
 .atividade-editavel-modal input:focus { outline: none; border-color: var(--cor-destaque); }
 .atividade-editavel-modal .input-descricao { flex-grow: 1; }
