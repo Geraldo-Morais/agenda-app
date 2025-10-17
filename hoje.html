@@ -8,138 +8,91 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --cor-fundo-default: #fdf6f8; --cor-texto-default: #5c3b47; --cor-destaque-default: #e4c3d0; --cor-hoje-default: #f2d9e6; --cor-borda-default: #d8b4c3;
-            --cor-fundo-sunset: #f5f0e8; --cor-texto-sunset: #5a4e3e; --cor-destaque-sunset: #e6dace; --cor-hoje-sunset: #f0e5d8; --cor-borda-sunset: #dccdbc;
-            --cor-fundo-ocean: #e8f1f5; --cor-texto-ocean: #3e5a59; --cor-destaque-ocean: #cee6ef; --cor-hoje-ocean: #d8eaf0; --cor-borda-ocean: #bcd8e0;
-            --cor-fundo-dark: #2c2c2c; --cor-texto-dark: #e0e0e0; --cor-destaque-dark: #4a4a4a; --cor-hoje-dark: #3a3a3a; --cor-borda-dark: #5a5a5a;
-            font-family: 'Roboto', sans-serif;
-            color: var(--cor-texto-default);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        [data-theme="sunset"] { --cor-fundo-default: var(--cor-fundo-sunset); --cor-texto-default: var(--cor-texto-sunset); --cor-destaque-default: var(--cor-destaque-sunset); --cor-hoje-default: var(--cor-hoje-sunset); --cor-borda-default: var(--cor-borda-sunset); }
-        [data-theme="ocean"] { --cor-fundo-default: var(--cor-fundo-ocean); --cor-texto-default: var(--cor-texto-ocean); --cor-destaque-default: var(--cor-destaque-ocean); --cor-hoje-default: var(--cor-hoje-ocean); --cor-borda-default: var(--cor-borda-ocean); }
-        [data-theme="dark"] { --cor-fundo-default: var(--cor-fundo-dark); --cor-texto-default: var(--cor-texto-dark); --cor-destaque-default: var(--cor-destaque-dark); --cor-hoje-default: var(--cor-hoje-dark); --cor-borda-default: var(--cor-borda-dark); }
-
-        body { background-color: var(--cor-fundo-default); margin: 0; padding: 10px; font-size: 14px; }
-        #widget-container { display: flex; flex-direction: column; position: relative; }
-        .header-widget { display: flex; justify-content: space-between; align-items: center; }
-        .titulo-widget { font-size: 1.2em; font-weight: 700; margin-bottom: 8px; color: var(--cor-texto-default); }
-        #btn-theme-widget { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; margin: 0; padding: 10px; background-color: #f5f5f5; }
+        #widget-container { display: flex; flex-direction: column; }
+        .titulo-widget { font-size: 1.2em; font-weight: 700; margin-bottom: 8px; color: #333; }
         .lista-atividades-widget { list-style: none; margin: 0; padding: 0; }
-        .atividade-widget { display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border-radius: 4px; background-color: var(--cor-destaque-default); cursor: pointer; transition: opacity 0.3s; }
+        .atividade-widget { display: flex; align-items: center; margin-bottom: 5px; padding: 8px; border-radius: 4px; background-color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .atividade-widget.concluida { opacity: 0.6; text-decoration: line-through; }
         .descricao-widget { flex-grow: 1; }
-        .horario-widget { font-size: 0.9em; margin-left: 8px; }
-        .sem-atividades { text-align: center; padding: 20px; color: var(--cor-texto-default); }
+        .horario-widget { font-size: 0.9em; margin-left: 8px; color: #777; }
+        .sem-atividades { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
 <body>
-
     <div id="widget-container">
-        <div class="header-widget">
-            <h2 class="titulo-widget">Metas de Hoje</h2>
-            <button id="btn-theme-widget" title="Mudar Tema">🎨</button>
-        </div>
-        <ul id="lista-atividades-widget" class="lista-atividades-widget"></ul>
+        <h2 class="titulo-widget">Metas de Hoje</h2>
+        <ul id="lista-atividades-widget" class="lista-atividades-widget">
+            <li class="sem-atividades">Carregando...</li>
+        </ul>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const listaAtividadesEl = document.getElementById('lista-atividades-widget');
-            const btnThemeWidget = document.getElementById('btn-theme-widget');
-            const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-            const temas = ['default', 'sunset', 'ocean', 'forest', 'dark'];
-            const canal = new BroadcastChannel('agenda_channel');
+            const firebaseConfig = {
+                apiKey: "AIzaSyAYhpZykVwZ-_KVkgx5iGBAITKtcuZMfUQ",
+                authDomain: "agenda-da-bea.firebaseapp.com",
+                projectId: "agenda-da-bea",
+                storageBucket: "agenda-da-bea.appspot.com",
+                messagingSenderId: "509913679664",
+                appId: "1:509913679664:web:9e251227071260b55e2af5"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const auth = firebase.auth();
 
-            function getWeekId(d) {
+            const listaAtividadesEl = document.getElementById('lista-atividades-widget');
+            const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
+            const getWeekId = (d) => {
                 d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
                 const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
                 const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
                 return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
-            }
+            };
 
-            function applyTheme(themeName) {
-                document.documentElement.setAttribute('data-theme', themeName || 'default');
-                localStorage.setItem('agendaTheme', themeName || 'default');
-            }
-
-            function notificarMudanca(tipo, dados) {
-                canal.postMessage({ type: tipo, payload: dados });
-            }
-
-            function toggleConcluidaWidget(atividadeId) {
-                const semanaId = getWeekId(new Date());
-                const semanaJSON = localStorage.getItem(`semana_${semanaId}`);
-                if (!semanaJSON) return;
-
-                let agendaDaSemana = JSON.parse(semanaJSON);
-                const hoje = new Date();
-                const nomeDiaHoje = mapaDosDias[hoje.getDay()];
-                const atividadesDoDia = agendaDaSemana[nomeDiaHoje] || [];
-
-                const atividade = atividadesDoDia.find(atv => atv.id === atividadeId);
-                if (atividade) {
-                    atividade.concluida = !atividade.concluida;
-                    localStorage.setItem(`semana_${semanaId}`, JSON.stringify(agendaDaSemana));
-                    notificarMudanca('agenda_change');
-                    loadTodayTasks();
-                }
-            }
-
-            function loadTodayTasks() {
-                listaAtividadesEl.innerHTML = '';
-                const themeName = localStorage.getItem('agendaTheme') || 'default';
-                applyTheme(themeName);
-
+            const loadTodayTasks = (user) => {
                 const hoje = new Date();
                 const nomeDiaHoje = mapaDosDias[hoje.getDay()];
                 const semanaId = getWeekId(hoje);
-                const semanaJSON = localStorage.getItem(`semana_${semanaId}`);
+                const semanaDocRef = db.collection('usuarios').doc(user.uid).collection('semanas').doc(semanaId);
 
-                if (semanaJSON) {
-                    const agendaDaSemana = JSON.parse(semanaJSON);
-                    const atividadesDoDia = agendaDaSemana[nomeDiaHoje] || [];
-                    if (atividadesDoDia.length > 0) {
-                        atividadesDoDia.forEach(atv => {
-                            const item = document.createElement('li');
-                            item.className = 'atividade-widget';
-                            item.dataset.id = atv.id;
-                            if (atv.concluida) item.classList.add('concluida');
-
-                            const horario = atv.inicio && atv.fim ? `${atv.inicio} - ${atv.fim}` : (atv.inicio || '');
-                            item.innerHTML = `<span class="descricao-widget">${atv.descricao}</span><span class="horario-widget">${horario}</span>`;
-                            item.addEventListener('click', () => toggleConcluidaWidget(atv.id));
-                            listaAtividadesEl.appendChild(item);
-                        });
+                semanaDocRef.onSnapshot(doc => {
+                    listaAtividadesEl.innerHTML = '';
+                    if (doc.exists) {
+                        const atividadesDoDia = doc.data()[nomeDiaHoje] || [];
+                        if (atividadesDoDia.length > 0) {
+                            atividadesDoDia.forEach(atv => {
+                                const item = document.createElement('li');
+                                item.className = 'atividade-widget';
+                                if (atv.concluida) item.classList.add('concluida');
+                                item.innerHTML = `<span class="descricao-widget">${atv.descricao}</span><span class="horario-widget">${atv.inicio || ''}</span>`;
+                                listaAtividadesEl.appendChild(item);
+                            });
+                        } else {
+                            listaAtividadesEl.innerHTML = '<li class="sem-atividades">Nenhuma atividade para hoje.</li>';
+                        }
                     } else {
-                        listaAtividadesEl.innerHTML = '<li class="sem-atividades">Nenhuma atividade para hoje.</li>';
+                        listaAtividadesEl.innerHTML = '<li class="sem-atividades">Abra o app principal para iniciar a semana.</li>';
                     }
-                } else {
-                    listaAtividadesEl.innerHTML = '<li class="sem-atividades">Abra o aplicativo para iniciar a semana.</li>';
-                }
-            }
-
-            btnThemeWidget.addEventListener('click', () => {
-                const currentTheme = localStorage.getItem('agendaTheme') || 'default';
-                const currentIndex = temas.indexOf(currentTheme);
-                const nextIndex = (currentIndex + 1) % temas.length;
-                const nextTheme = temas[nextIndex];
-                applyTheme(nextTheme);
-                notificarMudanca('theme_change', { theme: nextTheme });
-            });
-
-            canal.onmessage = (event) => {
-                const { type, payload } = event.data;
-                if (type === 'theme_change') {
-                    applyTheme(payload.theme);
-                } else if (type === 'agenda_change') {
-                    loadTodayTasks();
-                }
+                }, (error) => {
+                    listaAtividadesEl.innerHTML = '<li class="sem-atividades">Erro ao carregar.</li>';
+                });
             };
 
-            loadTodayTasks();
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    loadTodayTasks(user);
+                } else {
+                    auth.signInAnonymously().catch(() => {
+                        listaAtividadesEl.innerHTML = '<li class="sem-atividades">Falha na autenticação.</li>';
+                    });
+                }
+            });
         });
     </script>
 </body>

@@ -146,16 +146,7 @@ body {
 .atividade .descricao { font-weight: 500; }
 .atividade .horario { font-size: 0.85rem; color: #6c757d; }
 .titulo-dia-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid; margin-bottom: 1rem; padding-bottom: 0.5rem; transition: border-color 0.3s ease;}
-.titulo-dia-container h2 { margin-bottom: 0; margin-left: auto; }
-.contador-progresso {
-    font-size: 0.8rem;
-    font-weight: 700;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-botao);
-    padding: 0.2rem 0.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--cor-borda-botao);
-}
+.titulo-dia-container h2 { margin-bottom: 0; }
 
 /* Toast & Loader */
 .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); color: white; padding: 1rem 2rem; border-radius: var(--borda-arredondada); box-shadow: var(--sombra-hover); transition: bottom 0.5s ease; z-index: 1000; }
@@ -178,20 +169,6 @@ body {
 [data-theme="dark"] .atividade.agora .horario { color: #333; }
 [data-theme="dark"] .titulo-principal-container { background-color: #1c1c1e; border-bottom-color: #333; }
 
-[data-theme="forest"] {
-    --cor-fundo: #f0f4f0;
-    --cor-texto: #3a4d39;
-    --cor-dia-fundo: #e6eae6;
-    --cor-destaque: #739072;
-    --cor-numero-dia: rgba(115, 144, 114, 0.1);
-    --cor-borda-botao: #c8d2c8;
-    --cor-texto-botao: #4f6f52;
-    --cor-borda-1: #a9bba9;
-    --cor-borda-2: #8da68d;
-    --cor-borda-3: #739072;
-    --cor-borda-4: #587658;
-}
-
 /* Modals */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
 .modal-overlay.visivel { display: flex; }
@@ -204,18 +181,11 @@ body {
 #modal-editar-dia .modal-conteudo { max-height: 80vh; }
 .conteudo-modal-edicao { overflow-y: auto; padding-right: 10px; margin-bottom: 1rem; }
 .atividade-editavel-modal { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
-.drag-handle { cursor: grab; color: #aaa; margin-right: 0.5rem; }
-.sortable-ghost {
-    opacity: 0.4;
-    background-color: #e3f2fd;
-}
 .atividade-editavel-modal input { border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; font-family: 'Roboto', sans-serif; font-size: 0.9rem; background-color: #fff; transition: border-color 0.2s; }
 .atividade-editavel-modal input:focus { outline: none; border-color: var(--cor-destaque); }
-.atividade-editavel-modal .input-icon { width: 40px; text-align: center; }
 .atividade-editavel-modal .input-descricao { flex-grow: 1; }
 .atividade-editavel-modal .input-horario { width: 90px; }
 .btn-remover-modal { background-color: transparent; border: 1px solid var(--cor-borda-botao); color: var(--cor-texto-botao); font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all 0.2s ease; width: 36px; height: 36px; font-size: 1.2rem; }
-.atividade-icon { margin-right: 0.75rem; font-size: 1.2rem; }
 .btn-remover-modal:hover { background-color: var(--cor-vermelho-rem); border-color: var(--cor-vermelho-rem); color: white; }
 
 /* --- NOVO ESTILO PARA TELA DE CÓPIA --- */
@@ -274,7 +244,6 @@ input:checked + .slider:before { transform: translateX(22px); }
 .theme-btn[data-theme-set="default"] { background-color: #ffcdd2; }
 .theme-btn[data-theme-set="sunset"] { background-color: #ffab91; }
 .theme-btn[data-theme-set="ocean"] { background-color: #80cbc4; }
-.theme-btn[data-theme-set="forest"] { background-color: #739072; }
 .theme-btn[data-theme-set="dark"] { background-color: #333; }
 
 /* Media Queries */
@@ -285,39 +254,4 @@ input:checked + .slider:before { transform: translateX(22px); }
     .agenda-container { width: 100%; max-width: 100%; padding: 0 1rem; margin: 1rem auto; box-sizing: border-box; }
     .dias-semana { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .dia { min-height: 320px; padding: 0.75rem; }
-}
-
-.parabens-modal {
-    background: linear-gradient(135deg, #a8e6cf, #dcedc1);
-    color: #333;
-    text-align: center;
-}
-
-.parabens-modal h2 {
-    color: #2c6b57;
-    font-size: 2em;
-}
-
-#detalhes-titulo {
-    font-size: 1.5em;
-    margin-bottom: 0.5rem;
-}
-
-#detalhes-horario {
-    font-size: 0.9em;
-    color: var(--cor-texto-botao);
-    margin-top: 0;
-    margin-bottom: 1rem;
-}
-
-#detalhes-notas {
-    width: 100%;
-    min-height: 100px;
-    border: 1px solid var(--cor-borda-botao);
-    border-radius: var(--borda-arredondada);
-    padding: 0.5rem;
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    resize: vertical;
-    margin-bottom: 1rem;
 }
