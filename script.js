@@ -1,23 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONFIGURAÇÃO E REFERÊNCIAS ---
-    // Removido Firebase. Usaremos localStorage.
+    const canal = new BroadcastChannel('agenda_channel');
+
     const corpoPrincipal = document.querySelector('.corpo-principal');
     const loader = document.getElementById('loader');
     const containerDias = document.getElementById('container-dias');
     const tituloPrincipalEl = document.getElementById('titulo-principal');
     const toastEl = document.getElementById('toast');
     
-    // Botões
+    // Botões e Modals
     const botoesControleDiv = document.getElementById('botoes-controle');
     const botoesEdicaoSelecaoDiv = document.getElementById('botoes-edicao-selecao');
     const btnEditar = document.getElementById('btn-editar');
     const btnCancelarSelecao = document.getElementById('btn-cancelar-selecao');
     
-    // Modal de Configurações
-    const btnSettings = document.getElementById('btn-settings');
     const modalSettings = document.getElementById('modal-settings');
-    
-    // Modal de Edição de Dia
     const modalEditarDia = document.getElementById('modal-editar-dia');
     const tituloModalEdicao = document.getElementById('titulo-modal-edicao');
     const conteudoModalEdicao = document.getElementById('conteudo-modal-edicao');
@@ -26,19 +23,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelarEdicaoModal = document.getElementById('btn-cancelar-edicao-modal');
     const btnAddAtividadeModal = document.getElementById('btn-add-atividade-modal');
 
+    const modalParabens = document.getElementById('modal-parabens');
+    const mensagemParabensEl = document.getElementById('mensagem-parabens');
+    const btnFecharParabens = document.getElementById('btn-fechar-parabens');
+
+    const modalDetalhes = document.getElementById('modal-detalhes-atividade');
+    const detalhesTitulo = document.getElementById('detalhes-titulo');
+    const detalhesHorario = document.getElementById('detalhes-horario');
+    const detalhesNotas = document.getElementById('detalhes-notas');
+    const btnSalvarNotas = document.getElementById('btn-salvar-notas');
+    const btnConcluirTarefa = document.getElementById('btn-concluir-tarefa');
+    const soundCheckbox = document.getElementById('sound-checkbox');
+
     // Variáveis de estado
     let modoSelecao = false;
     let agendaDaSemana = {};
     let agendaTemplate = {};
     let semanaIdAtual = '';
+    let atividadeAtual = null;
+    let diaAtividadeAtual = '';
+    let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 
     const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+    const mensagensDeParabens = [
+        "Você é imparável! Metas do dia concluídas!",
+        "Incrível! Mais um dia produtivo na sua conta.",
+        "Parabéns! Você arrasou e completou tudo.",
+        "É isso aí! Continue brilhando e conquistando seus objetivos.",
+        "Missão cumprida! Descanse, você merece."
+    ];
     
-    // --- LÓGICA DE TEMA ---
+    // --- LÓGICA DE TEMA E SINCRONIZAÇÃO ---
     function applyTheme(themeName) {
         document.documentElement.setAttribute('data-theme', themeName || 'sunset');
         localStorage.setItem('agendaTheme', themeName || 'sunset');
     }
+
+    function notificarMudanca(tipo, dados) {
+        canal.postMessage({ type: tipo, payload: dados });
+    }
+
+    canal.onmessage = (event) => {
+        const { type, payload } = event.data;
+        if (type === 'theme_change') {
+            applyTheme(payload.theme);
+        } else if (type === 'agenda_change') {
+            carregarDados(false);
+        }
+    };
 
     // --- LÓGICA DA AGENDA (localStorage) ---
     function mostrarToast(mensagem, tipo = 'sucesso') { if (!toastEl) return; toastEl.textContent = mensagem; toastEl.className = 'toast'; toastEl.classList.add(tipo); toastEl.classList.add('show'); setTimeout(() => { toastEl.classList.remove('show'); }, 4000); }
@@ -53,15 +85,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function salvarAgendaDaSemana() {
         localStorage.setItem(`semana_${semanaIdAtual}`, JSON.stringify(agendaDaSemana));
-        notificarWidget();
+        notificarMudanca('agenda_change');
+    }
+
+    function verificarConclusaoDoDia(diaId) {
+        const atividadesDoDia = agendaDaSemana[diaId] || [];
+        if (atividadesDoDia.length > 0 && atividadesDoDia.every(atv => atv.concluida)) {
+            const mensagemAleatoria = mensagensDeParabens[Math.floor(Math.random() * mensagensDeParabens.length)];
+            mensagemParabensEl.textContent = mensagemAleatoria;
+            modalParabens.classList.add('visivel');
+            if (soundEnabled) {
+                playSound('complete');
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
     }
 
     function toggleConcluida(diaId, atividadeId) {
         const atividade = agendaDaSemana[diaId].find(atv => atv.id === atividadeId);
         if (atividade) {
             atividade.concluida = !atividade.concluida;
+            if(soundEnabled) playSound('click');
             salvarAgendaDaSemana();
             renderizarAgenda();
+            const hoje = new Date();
+            const nomeDiaHoje = mapaDosDias[hoje.getDay()];
+            if(diaId === nomeDiaHoje) {
+                verificarConclusaoDoDia(diaId);
+            }
         }
     }
 
@@ -76,6 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.id = nomeDia;
             if (index === diaDaSemanaDeHoje) diaDiv.classList.add('hoje');
             
+            diaDiv.addEventListener('click', () => {
+                if (modoSelecao) {
+                    abrirModalEdicao(nomeDia);
+                }
+            });
+
             const numeroDiaEl = document.createElement('span');
             numeroDiaEl.className = 'dia-numero';
             const dataAtual = new Date();
@@ -90,11 +147,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const tituloDia = document.createElement('h2');
             let nomeCapitalizado = nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1);
             tituloDia.textContent = (nomeDia !== 'sabado' && nomeDia !== 'domingo') ? `${nomeCapitalizado}-feira` : nomeCapitalizado;
+
+            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
+            const concluidas = atividadesDoDia.filter(atv => atv.concluida).length;
+            const total = atividadesDoDia.length;
+
+            if (total > 0) {
+                const contador = document.createElement('span');
+                contador.className = 'contador-progresso';
+                contador.textContent = `${concluidas}/${total}`;
+                tituloContainer.appendChild(contador);
+            }
+
             tituloContainer.appendChild(tituloDia);
             conteudoDiv.appendChild(tituloContainer);
 
             const listaAtividades = document.createElement('ul');
-            const atividadesDoDia = agendaDaSemana[nomeDia] || [];
             
             if (atividadesDoDia.length === 0) {
                 const mensagemVazio = document.createElement('p');
@@ -107,9 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemLista.dataset.id = atividade.id;
                     itemLista.className = 'atividade';
                     if (atividade.concluida) itemLista.classList.add('concluida');
-                    const horario = atividade.inicio && atividade.fim ? `${atividade.inicio} - ${atividade.fim}` : (atividade.inicio || '');
-                    itemLista.innerHTML = `<span class="descricao">${atividade.descricao}</span><span class="horario">${horario}</span>`;
-                    itemLista.addEventListener('click', () => { if (!modoSelecao) toggleConcluida(nomeDia, atividade.id); });
+                    itemLista.innerHTML = `<span class="atividade-icon">${atividade.icon || '📝'}</span><span class="descricao">${atividade.descricao}</span><span class="horario">${atividade.inicio || ''}</span>`;
+                    itemLista.addEventListener('click', (e) => {
+                        if (!modoSelecao) {
+                            e.stopPropagation(); // Impede que o clique no card do dia seja acionado
+                            abrirDetalhesAtividade(nomeDia, atividade.id);
+                        }
+                    });
                     listaAtividades.appendChild(itemLista);
                 });
             }
@@ -117,6 +189,29 @@ document.addEventListener('DOMContentLoaded', () => {
             diaDiv.appendChild(conteudoDiv);
             containerDias.appendChild(diaDiv);
         });
+    }
+
+    // --- LÓGICA DE DETALHES DA ATIVIDADE ---
+    function abrirDetalhesAtividade(diaId, atividadeId) {
+        diaAtividadeAtual = diaId;
+        atividadeAtual = agendaDaSemana[diaId].find(atv => atv.id === atividadeId);
+        if (!atividadeAtual) return;
+
+        detalhesTitulo.textContent = `${atividadeAtual.icon || '📝'} ${atividadeAtual.descricao}`;
+        detalhesHorario.textContent = atividadeAtual.inicio && atividadeAtual.fim ? `${atividadeAtual.inicio} - ${atividadeAtual.fim}` : (atividadeAtual.inicio || 'Horário não definido');
+        detalhesNotas.value = atividadeAtual.notas || '';
+
+        btnConcluirTarefa.textContent = atividadeAtual.concluida ? 'Desmarcar Conclusão' : 'Marcar como Concluída';
+
+        modalDetalhes.classList.add('visivel');
+    }
+
+    function salvarNotas() {
+        if (atividadeAtual) {
+            atividadeAtual.notas = detalhesNotas.value;
+            salvarAgendaDaSemana();
+            mostrarToast('Notas salvas com sucesso!');
+        }
     }
 
     // --- FLUXO DE EDIÇÃO ---
@@ -171,6 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
             renderizarOpcoesDeCopia(diaId);
         } else {
             renderizarEditorDeAtividades(atividadesDoDia);
+            new Sortable(conteudoModalEdicao, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+            });
         }
 
         modalEditarDia.classList.add('visivel');
@@ -185,9 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const descricao = div.querySelector('.input-descricao').value.trim();
             if (descricao) {
                 const id = div.dataset.id;
+                const icon = div.querySelector('.input-icon').value;
                 const inicio = div.querySelectorAll('.input-horario')[0].value;
                 const fim = div.querySelectorAll('.input-horario')[1].value;
-                novasAtividades.push({ id: id.startsWith('temp-') ? `${diaId}-${Date.now()}` : id, descricao, inicio, fim });
+                novasAtividades.push({ id: id.startsWith('temp-') ? `${diaId}-${Date.now()}` : id, icon, descricao, inicio, fim, notas: '' });
             }
         });
 
@@ -212,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(templateCompletado).forEach(dia => {
             templateCompletado[dia].forEach(atv => {
                 atv.concluida = false;
+                atv.notas = atv.notas || '';
             });
         });
         agendaDaSemana = templateCompletado;
@@ -235,6 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
         divAtividade.className = 'atividade-editavel-modal';
         divAtividade.dataset.id = atividade.id || `temp-${Date.now()}`;
         divAtividade.innerHTML = `
+            <span class="drag-handle">☰</span>
+            <input type="text" class="input-icon" value="${atividade.icon || '📝'}" maxlength="2">
             <input type="text" class="input-descricao" value="${atividade.descricao || ''}" placeholder="Nova Atividade">
             <input type="time" class="input-horario" value="${atividade.inicio || ''}">
             <input type="time" class="input-horario" value="${atividade.fim || ''}">
@@ -243,26 +347,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return divAtividade;
     }
 
-    function notificarWidget() {
-        if (window.Android && typeof window.Android.onAgendaUpdated === 'function') {
-            window.Android.onAgendaUpdated();
-        }
-    }
-
     // --- FUNÇÕES DE INICIALIZAÇÃO E CARREGAMENTO ---
-    async function carregarDados() {
-        loader.classList.add('ativo');
+    async function carregarDados(mostrarLoader = true) {
+        if(mostrarLoader) loader.classList.add('ativo');
 
-        // Carregar Tema
         const savedTheme = localStorage.getItem('agendaTheme') || 'sunset';
         applyTheme(savedTheme);
+        soundCheckbox.checked = soundEnabled;
 
-        // Carregar Template da Agenda
         const templateJSON = localStorage.getItem('agendaTemplate');
         if (templateJSON) {
             agendaTemplate = JSON.parse(templateJSON);
         } else {
-            // Carregar do arquivo agenda.json como fallback
             try {
                 const response = await fetch('agenda.json');
                 agendaTemplate = await response.json();
@@ -270,11 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Erro ao carregar agenda.json:", error);
                 mostrarToast('Não foi possível carregar o modelo de agenda.', 'info');
-                agendaTemplate = {}; // Define um template vazio para evitar erros
+                agendaTemplate = {};
             }
         }
 
-        // Lógica da Semana
         semanaIdAtual = getWeekId(new Date());
         const semanaJSON = localStorage.getItem(`semana_${semanaIdAtual}`);
 
@@ -282,13 +377,12 @@ document.addEventListener('DOMContentLoaded', () => {
             agendaDaSemana = JSON.parse(semanaJSON);
         } else {
             mostrarToast('Criando agenda para esta semana...', 'info');
-            atualizarSemanaComTemplate(); // Cria a agenda da semana a partir do template
+            atualizarSemanaComTemplate();
         }
-        
-        renderizarAgenda();
-        loader.classList.remove('ativo');
-    }
 
+        renderizarAgenda();
+        if(mostrarLoader) loader.classList.remove('ativo');
+    }
 
     function inicializar() {
         const hoje = new Date();
@@ -297,30 +391,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('.theme-switcher').addEventListener('click', (e) => {
             if (e.target.classList.contains('theme-btn')) {
-                applyTheme(e.target.dataset.themeSet);
+                const theme = e.target.dataset.themeSet;
+                applyTheme(theme);
+                notificarMudanca('theme_change', { theme });
             }
         });
-        // Remove a lógica de sync do tema, já que não usamos mais Firebase
-        document.querySelector('.sync-container').style.display = 'none';
 
         btnEditar.addEventListener('click', () => alternarModoSelecao(true));
         btnCancelarSelecao.addEventListener('click', () => alternarModoSelecao(false));
-        containerDias.addEventListener('click', (e) => {
-            if (modoSelecao) {
-                const diaCard = e.target.closest('.dia');
-                if (diaCard) abrirModalEdicao(diaCard.id);
-            }
-        });
 
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const modal = e.target.closest('.modal-overlay');
-                if (modal.id === 'modal-editar-dia') fecharModalEdicao();
-                else modal.classList.remove('visivel');
+                e.target.closest('.modal-overlay').classList.remove('visivel');
             });
         });
 
+        btnFecharParabens.addEventListener('click', () => modalParabens.classList.remove('visivel'));
         btnSettings.addEventListener('click', () => modalSettings.classList.add('visivel'));
+
+        soundCheckbox.addEventListener('change', () => {
+            soundEnabled = soundCheckbox.checked;
+            localStorage.setItem('soundEnabled', soundEnabled);
+        });
+
+        // Lógica de Backup e Restauração
+        const btnExportar = document.getElementById('btn-exportar');
+        const btnImportar = document.getElementById('btn-importar');
+        const inputImportFile = document.getElementById('input-import-file');
+
+        btnExportar.addEventListener('click', () => {
+            const dataStr = JSON.stringify(agendaTemplate, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'minha_rotina.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            mostrarToast('Rotina exportada com sucesso!');
+        });
+
+        btnImportar.addEventListener('click', () => {
+            inputImportFile.click();
+        });
+
+        inputImportFile.addEventListener('change', (event) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const novoTemplate = JSON.parse(e.target.result);
+                    if (typeof novoTemplate === 'object' && novoTemplate !== null) {
+                        agendaTemplate = novoTemplate;
+                        localStorage.setItem('agendaTemplate', JSON.stringify(agendaTemplate));
+                        mostrarToast('Rotina importada com sucesso!');
+                        if (confirm("Deseja aplicar a nova rotina à semana atual?")) {
+                            atualizarSemanaComTemplate();
+                        }
+                        modalSettings.classList.remove('visivel');
+                    } else {
+                        throw new Error("Formato de arquivo inválido.");
+                    }
+                } catch (error) {
+                    mostrarToast('Erro ao importar: ' + error.message, 'info');
+                }
+            };
+            reader.readAsText(event.target.files[0]);
+        });
+
         btnSalvarEdicaoModal.addEventListener('click', () => salvarAlteracoesDoModal(modalEditarDia.dataset.diaId));
         btnCancelarEdicaoModal.addEventListener('click', fecharModalEdicao);
         
@@ -340,6 +476,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (e.target.classList.contains('botao-copia')) {
                 copiarAtividadesParaModal(e.target.dataset.diaFonte, modalEditarDia.dataset.diaId);
+            }
+        });
+
+        btnSalvarNotas.addEventListener('click', salvarNotas);
+        btnConcluirTarefa.addEventListener('click', () => {
+            if(atividadeAtual) {
+                toggleConcluida(diaAtividadeAtual, atividadeAtual.id);
+                modalDetalhes.classList.remove('visivel');
             }
         });
 
