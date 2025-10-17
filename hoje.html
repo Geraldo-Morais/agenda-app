@@ -9,44 +9,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Definindo paletas de cores */
             --cor-fundo-default: #fdf6f8; --cor-texto-default: #5c3b47; --cor-destaque-default: #e4c3d0; --cor-hoje-default: #f2d9e6; --cor-borda-default: #d8b4c3;
             --cor-fundo-sunset: #f5f0e8; --cor-texto-sunset: #5a4e3e; --cor-destaque-sunset: #e6dace; --cor-hoje-sunset: #f0e5d8; --cor-borda-sunset: #dccdbc;
             --cor-fundo-ocean: #e8f1f5; --cor-texto-ocean: #3e5a59; --cor-destaque-ocean: #cee6ef; --cor-hoje-ocean: #d8eaf0; --cor-borda-ocean: #bcd8e0;
             --cor-fundo-dark: #2c2c2c; --cor-texto-dark: #e0e0e0; --cor-destaque-dark: #4a4a4a; --cor-hoje-dark: #3a3a3a; --cor-borda-dark: #5a5a5a;
-
             font-family: 'Roboto', sans-serif;
             color: var(--cor-texto-default);
+            transition: background-color 0.3s, color 0.3s;
         }
         [data-theme="sunset"] { --cor-fundo-default: var(--cor-fundo-sunset); --cor-texto-default: var(--cor-texto-sunset); --cor-destaque-default: var(--cor-destaque-sunset); --cor-hoje-default: var(--cor-hoje-sunset); --cor-borda-default: var(--cor-borda-sunset); }
         [data-theme="ocean"] { --cor-fundo-default: var(--cor-fundo-ocean); --cor-texto-default: var(--cor-texto-ocean); --cor-destaque-default: var(--cor-destaque-ocean); --cor-hoje-default: var(--cor-hoje-ocean); --cor-borda-default: var(--cor-borda-ocean); }
         [data-theme="dark"] { --cor-fundo-default: var(--cor-fundo-dark); --cor-texto-default: var(--cor-texto-dark); --cor-destaque-default: var(--cor-destaque-dark); --cor-hoje-default: var(--cor-hoje-dark); --cor-borda-default: var(--cor-borda-dark); }
 
         body { background-color: var(--cor-fundo-default); margin: 0; padding: 10px; font-size: 14px; }
-        #widget-container { display: flex; flex-direction: column; }
+        #widget-container { display: flex; flex-direction: column; position: relative; }
+        .header-widget { display: flex; justify-content: space-between; align-items: center; }
         .titulo-widget { font-size: 1.2em; font-weight: 700; margin-bottom: 8px; color: var(--cor-texto-default); }
+        #btn-theme-widget { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0; }
         .lista-atividades-widget { list-style: none; margin: 0; padding: 0; }
-        .atividade-widget { display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border-radius: 4px; background-color: var(--cor-destaque-default); }
+        .atividade-widget { display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border-radius: 4px; background-color: var(--cor-destaque-default); cursor: pointer; transition: opacity 0.3s; }
         .atividade-widget.concluida { opacity: 0.6; text-decoration: line-through; }
         .descricao-widget { flex-grow: 1; }
         .horario-widget { font-size: 0.9em; margin-left: 8px; }
-        .loader-widget { text-align: center; padding: 20px; }
         .sem-atividades { text-align: center; padding: 20px; color: var(--cor-texto-default); }
     </style>
 </head>
 <body>
 
     <div id="widget-container">
-        <h2 class="titulo-widget">Metas de Hoje</h2>
-        <div id="loader-widget" class="loader-widget">Carregando...</div>
+        <div class="header-widget">
+            <h2 class="titulo-widget">Metas de Hoje</h2>
+            <button id="btn-theme-widget" title="Mudar Tema">🎨</button>
+        </div>
         <ul id="lista-atividades-widget" class="lista-atividades-widget"></ul>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const loader = document.getElementById('loader-widget');
             const listaAtividadesEl = document.getElementById('lista-atividades-widget');
+            const btnThemeWidget = document.getElementById('btn-theme-widget');
             const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+            const temas = ['default', 'sunset', 'ocean', 'dark'];
             const canal = new BroadcastChannel('agenda_channel');
 
             function getWeekId(d) {
@@ -58,35 +61,56 @@
             }
 
             function applyTheme(themeName) {
-                document.documentElement.setAttribute('data-theme', themeName || 'sunset');
+                document.documentElement.setAttribute('data-theme', themeName || 'default');
+                localStorage.setItem('agendaTheme', themeName || 'default');
+            }
+
+            function notificarMudanca(tipo, dados) {
+                canal.postMessage({ type: tipo, payload: dados });
+            }
+
+            function toggleConcluidaWidget(atividadeId) {
+                const semanaId = getWeekId(new Date());
+                const semanaJSON = localStorage.getItem(`semana_${semanaId}`);
+                if (!semanaJSON) return;
+
+                let agendaDaSemana = JSON.parse(semanaJSON);
+                const hoje = new Date();
+                const nomeDiaHoje = mapaDosDias[hoje.getDay()];
+                const atividadesDoDia = agendaDaSemana[nomeDiaHoje] || [];
+
+                const atividade = atividadesDoDia.find(atv => atv.id === atividadeId);
+                if (atividade) {
+                    atividade.concluida = !atividade.concluida;
+                    localStorage.setItem(`semana_${semanaId}`, JSON.stringify(agendaDaSemana));
+                    notificarMudanca('agenda_change');
+                    loadTodayTasks();
+                }
             }
 
             function loadTodayTasks() {
-                loader.style.display = 'block';
                 listaAtividadesEl.innerHTML = '';
-
-                const themeName = localStorage.getItem('agendaTheme') || 'sunset';
+                const themeName = localStorage.getItem('agendaTheme') || 'default';
                 applyTheme(themeName);
 
                 const hoje = new Date();
                 const nomeDiaHoje = mapaDosDias[hoje.getDay()];
                 const semanaId = getWeekId(hoje);
-
                 const semanaJSON = localStorage.getItem(`semana_${semanaId}`);
 
                 if (semanaJSON) {
                     const agendaDaSemana = JSON.parse(semanaJSON);
                     const atividadesDoDia = agendaDaSemana[nomeDiaHoje] || [];
-
                     if (atividadesDoDia.length > 0) {
                         atividadesDoDia.forEach(atv => {
                             const item = document.createElement('li');
                             item.className = 'atividade-widget';
-                            if (atv.concluida) {
-                                item.classList.add('concluida');
-                            }
+                            item.dataset.id = atv.id;
+                            if (atv.concluida) item.classList.add('concluida');
+
                             const horario = atv.inicio && atv.fim ? `${atv.inicio} - ${atv.fim}` : (atv.inicio || '');
                             item.innerHTML = `<span class="descricao-widget">${atv.descricao}</span><span class="horario-widget">${horario}</span>`;
+                            item.addEventListener('click', () => toggleConcluidaWidget(atv.id));
                             listaAtividadesEl.appendChild(item);
                         });
                     } else {
@@ -95,9 +119,16 @@
                 } else {
                     listaAtividadesEl.innerHTML = '<li class="sem-atividades">Abra o aplicativo para iniciar a semana.</li>';
                 }
-
-                loader.style.display = 'none';
             }
+
+            btnThemeWidget.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('agendaTheme') || 'default';
+                const currentIndex = temas.indexOf(currentTheme);
+                const nextIndex = (currentIndex + 1) % temas.length;
+                const nextTheme = temas[nextIndex];
+                applyTheme(nextTheme);
+                notificarMudanca('theme_change', { theme: nextTheme });
+            });
 
             canal.onmessage = (event) => {
                 const { type, payload } = event.data;
