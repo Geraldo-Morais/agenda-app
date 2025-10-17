@@ -3,31 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda do Dia</title>
+    <title>Metas de Hoje</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            /* Definindo paletas de cores */
+            --cor-fundo-default: #fdf6f8; --cor-texto-default: #5c3b47; --cor-destaque-default: #e4c3d0; --cor-hoje-default: #f2d9e6; --cor-borda-default: #d8b4c3;
+            --cor-fundo-sunset: #f5f0e8; --cor-texto-sunset: #5a4e3e; --cor-destaque-sunset: #e6dace; --cor-hoje-sunset: #f0e5d8; --cor-borda-sunset: #dccdbc;
+            --cor-fundo-ocean: #e8f1f5; --cor-texto-ocean: #3e5a59; --cor-destaque-ocean: #cee6ef; --cor-hoje-ocean: #d8eaf0; --cor-borda-ocean: #bcd8e0;
+            --cor-fundo-dark: #2c2c2c; --cor-texto-dark: #e0e0e0; --cor-destaque-dark: #4a4a4a; --cor-hoje-dark: #3a3a3a; --cor-borda-dark: #5a5a5a;
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="script.js" defer></script>
+            font-family: 'Roboto', sans-serif;
+            color: var(--cor-texto-default);
+        }
+        [data-theme="sunset"] { --cor-fundo-default: var(--cor-fundo-sunset); --cor-texto-default: var(--cor-texto-sunset); --cor-destaque-default: var(--cor-destaque-sunset); --cor-hoje-default: var(--cor-hoje-sunset); --cor-borda-default: var(--cor-borda-sunset); }
+        [data-theme="ocean"] { --cor-fundo-default: var(--cor-fundo-ocean); --cor-texto-default: var(--cor-texto-ocean); --cor-destaque-default: var(--cor-destaque-ocean); --cor-hoje-default: var(--cor-hoje-ocean); --cor-borda-default: var(--cor-borda-ocean); }
+        [data-theme="dark"] { --cor-fundo-default: var(--cor-fundo-dark); --cor-texto-default: var(--cor-texto-dark); --cor-destaque-default: var(--cor-destaque-dark); --cor-hoje-default: var(--cor-hoje-dark); --cor-borda-default: var(--cor-borda-dark); }
+
+        body { background-color: var(--cor-fundo-default); margin: 0; padding: 10px; font-size: 14px; }
+        #widget-container { display: flex; flex-direction: column; }
+        .titulo-widget { font-size: 1.2em; font-weight: 700; margin-bottom: 8px; color: var(--cor-texto-default); }
+        .lista-atividades-widget { list-style: none; margin: 0; padding: 0; }
+        .atividade-widget { display: flex; align-items: center; margin-bottom: 5px; padding: 5px; border-radius: 4px; background-color: var(--cor-destaque-default); }
+        .atividade-widget.concluida { opacity: 0.6; text-decoration: line-through; }
+        .descricao-widget { flex-grow: 1; }
+        .horario-widget { font-size: 0.9em; margin-left: 8px; }
+        .loader-widget { text-align: center; padding: 20px; }
+        .sem-atividades { text-align: center; padding: 20px; color: var(--cor-texto-default); }
+    </style>
 </head>
-<body class="vista-diaria">
-    <main class="agenda-container">
-        <div class="dias-semana" id="container-dias"></div>
-    </main>
-    <div id="toast" class="toast"></div>
+<body>
+
+    <div id="widget-container">
+        <h2 class="titulo-widget">Metas de Hoje</h2>
+        <div id="loader-widget" class="loader-widget">Carregando...</div>
+        <ul id="lista-atividades-widget" class="lista-atividades-widget"></ul>
+    </div>
 
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/agenda-app/pwabuilder-sw.js', { scope: '/agenda-app/' })
-            .then(reg => console.log('Service Worker registrado com sucesso!', reg))
-            .catch(err => console.log('Falha ao registrar o Service Worker:', err));
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader-widget');
+            const listaAtividadesEl = document.getElementById('lista-atividades-widget');
+            const mapaDosDias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
+            function getWeekId(d) {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, '0')}`;
+            }
+
+            function applyTheme(themeName) {
+                document.documentElement.setAttribute('data-theme', themeName || 'sunset');
+            }
+
+            function loadTodayTasks() {
+                loader.style.display = 'block';
+                listaAtividadesEl.innerHTML = '';
+
+                // Carregar tema do localStorage
+                const themeName = localStorage.getItem('agendaTheme') || 'sunset';
+                applyTheme(themeName);
+
+                const hoje = new Date();
+                const nomeDiaHoje = mapaDosDias[hoje.getDay()];
+                const semanaId = getWeekId(hoje);
+
+                const semanaJSON = localStorage.getItem(`semana_${semanaId}`);
+
+                if (semanaJSON) {
+                    const agendaDaSemana = JSON.parse(semanaJSON);
+                    const atividadesDoDia = agendaDaSemana[nomeDiaHoje] || [];
+
+                    if (atividadesDoDia.length > 0) {
+                        atividadesDoDia.forEach(atv => {
+                            const item = document.createElement('li');
+                            item.className = 'atividade-widget';
+                            if (atv.concluida) {
+                                item.classList.add('concluida');
+                            }
+                            const horario = atv.inicio && atv.fim ? `${atv.inicio} - ${atv.fim}` : (atv.inicio || '');
+                            item.innerHTML = `<span class="descricao-widget">${atv.descricao}</span><span class="horario-widget">${horario}</span>`;
+                            listaAtividadesEl.appendChild(item);
+                        });
+                    } else {
+                        listaAtividadesEl.innerHTML = '<li class="sem-atividades">Nenhuma atividade para hoje.</li>';
+                    }
+                } else {
+                    listaAtividadesEl.innerHTML = '<li class="sem-atividades">Abra o aplicativo para iniciar a semana.</li>';
+                }
+
+                loader.style.display = 'none';
+            }
+
+            loadTodayTasks();
         });
-      }
     </script>
 </body>
 </html>
