@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body class="corpo-principal">
@@ -43,7 +41,7 @@
         <div class="modal-conteudo">
             <button class="botao-fechar-modal">X</button>
             <h3>Configurações de Tema</h3>
-            <div class="sync-container">
+            <div class="sync-container" style="display: none;">
                 <label for="sync-theme-checkbox" class="sync-label">Sincronizar Tema</label>
                 <label class="switch">
                     <input type="checkbox" id="sync-theme-checkbox">
@@ -78,7 +76,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/agenda-app/pwabuilder-sw.js', { scope: '/agenda-app/' })
+          navigator.serviceWorker.register('pwabuilder-sw.js', { scope: '/' })
             .then(reg => console.log('Service Worker registrado com sucesso!', reg))
             .catch(err => console.log('Falha ao registrar o Service Worker:', err));
         });
