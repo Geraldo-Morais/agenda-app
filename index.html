@@ -11,6 +11,8 @@
     <link rel="manifest" href="manifest.json">
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="audio.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body class="corpo-principal">
@@ -53,6 +55,7 @@
                 <button class="theme-btn" data-theme-set="default" title="Pétala"></button>
                 <button class="theme-btn" data-theme-set="sunset" title="Pôr do Sol"></button>
                 <button class="theme-btn" data-theme-set="ocean" title="Oceano"></button>
+                <button class="theme-btn" data-theme-set="forest" title="Floresta"></button>
                 <button class="theme-btn" data-theme-set="dark" title="Modo Escuro"></button>
             </div>
             <hr style="width:100%; border-color:rgba(0,0,0,0.1); margin: 1.5rem 0;">
@@ -64,6 +67,14 @@
                     <button id="btn-importar" class="botao-modal">Importar</button>
                     <input type="file" id="input-import-file" style="display: none;" accept=".json">
                 </div>
+            </div>
+            <hr style="width:100%; border-color:rgba(0,0,0,0.1); margin: 1.5rem 0;">
+            <div class="sound-container">
+                <h3>Som</h3>
+                <label class="switch">
+                    <input type="checkbox" id="sound-checkbox">
+                    <span class="slider round"></span>
+                </label>
             </div>
         </div>
     </div>
@@ -80,6 +91,19 @@
                     <button id="btn-cancelar-edicao-modal" class="botao-modal">Cancelar</button>
                     <button id="btn-salvar-edicao-modal" class="botao-modal salvar">Salvar Alterações</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalhes-atividade" class="modal-overlay">
+        <div class="modal-conteudo">
+            <button class="botao-fechar-modal">X</button>
+            <h3 id="detalhes-titulo"></h3>
+            <p id="detalhes-horario"></p>
+            <textarea id="detalhes-notas" placeholder="Adicione suas notas aqui..."></textarea>
+            <div class="botoes-acao-modal">
+                <button id="btn-salvar-notas" class="botao-modal salvar">Salvar Notas</button>
+                <button id="btn-concluir-tarefa" class="botao-modal">Marcar como Concluída</button>
             </div>
         </div>
     </div>
